@@ -92,6 +92,7 @@ public class Property {
     protected void onCreate() {
         this.createdDate = LocalDateTime.now();
         this.updatedDate = LocalDateTime.now();
+        this.activeStatus = 1;
     }
 
     @PreUpdate

@@ -67,6 +67,7 @@ public class Room {
     protected void onCreate() {
         this.createdDate = LocalDateTime.now();
         this.updatedDate = LocalDateTime.now();
+        this.activeRoom = 1;
     }
 
     @PreUpdate
