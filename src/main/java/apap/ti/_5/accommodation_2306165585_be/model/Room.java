@@ -27,7 +27,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "room")
 @SQLDelete(sql = "UPDATE room SET active_room = 0 WHERE room_id = ?")
-@SQLRestriction("active_room = 1") 
 public class Room {
 
     @Id

@@ -2,6 +2,7 @@ package apap.ti._5.accommodation_2306165585_be.service.roomtype;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype.AddRoomTy
 import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.roomtype.RoomTypeResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
+
 
 @Service
 public class RoomTypeServiceImpl implements RoomTypeService {
@@ -40,8 +42,15 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     }
 
     @Override
-    public RoomType createRoomType(AddRoomTypeRequestDTO request, Property property) {
-        String propertyNumber = property.getPropertyID().substring(9, 12);
+    public List<RoomTypeResponseDTO> getRoomTypesByProperty(Property property, LocalDateTime checkIn, LocalDateTime checkOut) {
+        return property.getListRoomType().stream()
+            .map(roomType -> mapToRoomTypeDTO(roomType, checkIn, checkOut))
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public RoomType createRoomType(AddRoomTypeRequestDTO request, String propertyId) {
+        String propertyNumber = propertyId.substring(9, 12);
         String roomTypeId = String.format("%s-%s-%d", propertyNumber, request.getName(), request.getFloor());
 
         RoomType roomType = RoomType.builder()
@@ -57,8 +66,27 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         return roomTypeRepository.save(roomType);
     }
 
+    @Override
+    public RoomType updateRoomType(RoomType roomType) {
+        return roomTypeRepository.save(roomType);
+    }
+
     private RoomTypeResponseDTO mapToRoomTypeDTO(RoomType roomType) {
         List<RoomResponseDTO> roomDTOs = roomService.getRoomsByRoomType(roomType);
+        return RoomTypeResponseDTO.builder()
+            .roomTypeID(roomType.getRoomTypeID())
+            .name(roomType.getName())
+            .price(roomType.getPrice())
+            .description(roomType.getDescription())
+            .capacity(roomType.getCapacity())
+            .facility(roomType.getFacility())
+            .floor(roomType.getFloor())
+            .listRoom(roomDTOs)
+            .build();
+    }
+
+    private RoomTypeResponseDTO mapToRoomTypeDTO(RoomType roomType, LocalDateTime checkIn, LocalDateTime checkOut) {
+        List<RoomResponseDTO> roomDTOs = roomService.getRoomsByRoomType(roomType, checkIn, checkOut);
         return RoomTypeResponseDTO.builder()
             .roomTypeID(roomType.getRoomTypeID())
             .name(roomType.getName())

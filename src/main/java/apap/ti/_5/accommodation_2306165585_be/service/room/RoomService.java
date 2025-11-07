@@ -14,4 +14,5 @@ public interface RoomService {
     List<RoomResponseDTO> getRoomsByRoomType(RoomType roomType);
     List<RoomResponseDTO> getRoomsByRoomType(RoomType roomType, LocalDateTime checkIn, LocalDateTime checkOut);
     Room createRoom(Property property, RoomType roomType);
+    void deleteRoom(String roomId);
 }

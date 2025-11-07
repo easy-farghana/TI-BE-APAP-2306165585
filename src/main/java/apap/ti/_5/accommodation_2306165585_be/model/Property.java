@@ -30,7 +30,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "properties")
 @SQLDelete(sql = "UPDATE properties SET active_status = 0 WHERE property_id = ?")
-@SQLRestriction("active_status = 1") 
 public class Property {
 
     @Id
@@ -69,10 +68,7 @@ public class Property {
     @Column(name = "income")
     private int income;
 
-    @OneToMany(
-        cascade = CascadeType.ALL, 
-        fetch = FetchType.LAZY
-    )
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id")
     private List<RoomType> listRoomType;
 

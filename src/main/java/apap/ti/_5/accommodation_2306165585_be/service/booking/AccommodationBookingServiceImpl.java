@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import apap.ti._5.accommodation_2306165585_be.model.AccommodationBooking;
 import apap.ti._5.accommodation_2306165585_be.repository.AccommodationBookingRepository;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
-import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 
 @Service
 public class AccommodationBookingServiceImpl implements AccommodationBookingService {

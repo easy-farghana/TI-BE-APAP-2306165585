@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import apap.ti._5.accommodation_2306165585_be.exception.NotFoundException;
 import apap.ti._5.accommodation_2306165585_be.model.AccommodationBooking;
 import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.model.Room;
@@ -57,7 +58,22 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Room createRoom(Property property, RoomType roomType) {
-        String roomName = String.format("%d%02d", roomType.getFloor(), roomType.getListRoom().size() + 1);
+        int floor = roomType.getFloor();
+        List<RoomType> roomTypes = property.getListRoomType();
+        long existingRoomsOnFloor;
+        
+        // check how many units are there already in the property's floor
+        existingRoomsOnFloor = roomType.getListRoom().size();
+
+        if (roomTypes != null) {
+            existingRoomsOnFloor += roomTypes.stream()
+                .filter(rt -> rt.getFloor() == floor)
+                .flatMap(rt -> rt.getListRoom().stream())
+                .count();
+
+        }
+
+        String roomName = String.format("%d%02d", floor, existingRoomsOnFloor + 1);
         String roomId = String.format("%s-%s", property.getPropertyID(), roomName);
         
         Room room = Room.builder()
@@ -66,6 +82,15 @@ public class RoomServiceImpl implements RoomService {
             .listAccommodationBooking(new ArrayList<>())
             .build();
         return roomRepository.save(room);
+    }
+
+    @Override
+    public void deleteRoom(String roomId) {
+        Room room = roomRepository.findById(roomId)
+            .orElseThrow(() -> new NotFoundException("Room not found with ID: " + roomId));
+        room.setActiveRoom(0);
+        room.setAvailabilityStatus(0);
+        roomRepository.save(room);
     }
 
     /**
@@ -81,6 +106,14 @@ public class RoomServiceImpl implements RoomService {
      * @return a RoomResponseDTO containing the room information and availability status
      */
     private RoomResponseDTO mapToRoomDTO(Room room) {
+        if (room.getActiveRoom() == 0) {
+            return RoomResponseDTO.builder()
+                .roomID(room.getRoomID())
+                .name(room.getName())
+                .availabilityStatus(0)
+                .build();
+        }
+
         LocalDateTime checkIn = LocalDateTime.now();
         LocalDateTime checkOut = checkIn.plusDays(1);
         int availabilityStatus = isRoomAvailable(room, checkIn, checkOut) ? 1 : 0;
@@ -103,7 +136,16 @@ public class RoomServiceImpl implements RoomService {
      * @return a RoomResponseDTO with room details and computed availability status
      */
     private RoomResponseDTO mapToRoomDTO(Room room, LocalDateTime checkIn, LocalDateTime checkOut) {
+        if (room.getActiveRoom() == 0) {
+            return RoomResponseDTO.builder()
+                .roomID(room.getRoomID())
+                .name(room.getName())
+                .availabilityStatus(0)
+                .build();
+        }
+
         int availabilityStatus = isRoomAvailable(room, checkIn, checkOut) ? 1 : 0;
+        
         return RoomResponseDTO.builder()
             .roomID(room.getRoomID())
             .name(room.getName())
