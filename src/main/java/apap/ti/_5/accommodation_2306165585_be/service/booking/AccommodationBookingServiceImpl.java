@@ -1,9 +1,14 @@
 package apap.ti._5.accommodation_2306165585_be.service.booking;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -19,6 +24,7 @@ import apap.ti._5.accommodation_2306165585_be.repository.RoomRepository;
 import apap.ti._5.accommodation_2306165585_be.repository.RoomTypeRepository;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.booking.AddBookingRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AllBookingResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -49,13 +55,28 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         this.propertyRepository = propertyRepository;
     }
 
-    @Override
-    public List<AccommodationBookingResponseDTO> getAllAccommodationBookings() {
-        return bookingRepository.findAll()
-            .stream()
-            .map(this::mapToAccommodationBookingDTO)
-            .collect(Collectors.toList());
+   @Override
+    public List<AllBookingResponseDTO> getAllAccommodationBookings() {
+        List<Object[]> rows = bookingRepository.findAllBookingsWithPropertyInfo();
+        List<AllBookingResponseDTO> results = new ArrayList<>();
+
+        for (Object[] row : rows) {
+            AllBookingResponseDTO dto = new AllBookingResponseDTO();
+            dto.setBookingID((String) row[0]);
+            dto.setRoomName((String) row[1]);
+            dto.setPropertyName((String) row[2]);
+            dto.setStatus((Integer) row[3]);
+            dto.setCheckInDate(((Timestamp) row[4]).toLocalDateTime());
+            dto.setCheckOutDate(((Timestamp) row[5]).toLocalDateTime());
+            dto.setTotalPrice((Integer) row[6]);
+            results.add(dto);
+        }
+
+        return results;
     }
+
+
+
 
     @Override 
     public AccommodationBookingResponseDTO getAccommodationBookingById(String id) {
@@ -74,8 +95,8 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         LocalDateTime checkInDate = request.getCheckInDate();
         LocalDateTime checkOutDate = request.getCheckOutDate();
 
-        RoomType roomType = roomTypeRepository.findById(request.getRoomTypeId()).orElseThrow(
-                    () -> new NotFoundException("Room type not found with ID: " + request.getRoomTypeId())
+        RoomType roomType = roomTypeRepository.findById(request.getRoomTypeID()).orElseThrow(
+                    () -> new NotFoundException("Room type not found with ID: " + request.getRoomTypeID())
                 );
 
         validateBookingRequest(request, room, roomType, false, null);
@@ -112,6 +133,7 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
             .customerEmail(request.getCustomerEmail())
             .customerPhone(request.getCustomerPhone())
             .room(room)
+            .roomTypeID(roomType.getRoomTypeID())
             .status(0)
             .build();
         
@@ -150,8 +172,8 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
             () -> new NotFoundException("Room not found with ID: " + request.getRoomID())
         );
 
-        RoomType newRoomType = roomTypeRepository.findById(request.getRoomTypeId()).orElseThrow(
-            () -> new NotFoundException("Room type not found with ID: " + request.getRoomTypeId())
+        RoomType newRoomType = roomTypeRepository.findById(request.getRoomTypeID()).orElseThrow(
+            () -> new NotFoundException("Room type not found with ID: " + request.getRoomTypeID())
         );
 
         validateBookingRequest(request, newRoom, newRoomType, true, booking.getRoom().getRoomID());
@@ -179,16 +201,16 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
             booking.setExtraPay(0);
             booking.setRefund(0);
         }
-
+        
         // Update booking ID if room changed
         if (!booking.getRoom().getRoomID().equals(newRoom.getRoomID())) {
-            String[] parts = booking.getBookingID().split("-", 3);
-            if (parts.length == 3) {
-                String newLastSevenChars = newRoom.getRoomID()
-                    .substring(newRoom.getRoomID().length() - 7);
-                String newBookingID = String.format("BOOK-%s-%s", newLastSevenChars, parts[2]);
-                booking.setBookingID(newBookingID);
-            }
+            String[] parts = booking.getBookingID().split("-", 4);
+            String newLastSevenChars = newRoom.getRoomID()
+                .substring(newRoom.getRoomID().length() - 7);
+            String newBookingID = String.format("BOOK-%s-%s", newLastSevenChars, parts[3]);
+            bookingRepository.delete(booking);
+            booking.setBookingID(newBookingID);
+            
         }
 
         // Update booking details
@@ -197,6 +219,7 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         booking.setCheckOutDate(request.getCheckOutDate());
         booking.setTotalDays(daysStaying);
         booking.setTotalPrice(oldTotalPrice);
+        booking.setRoomTypeID(newRoomType.getRoomTypeID());
         booking.setCapacity(request.getCapacity());
         booking.setBreakfast(request.getIsBreakfast());
         booking.setCustomerID(request.getCustomerID());
@@ -351,6 +374,7 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
     }
 
     private AccommodationBookingResponseDTO mapToAccommodationBookingDTO(AccommodationBooking accommodationBooking) {
+        Room bookedRoom = accommodationBooking.getRoom(); 
         return AccommodationBookingResponseDTO.builder()
             .bookingID(accommodationBooking.getBookingID())
             .checkInDate(accommodationBooking.getCheckInDate())
@@ -367,8 +391,11 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
             .extraPay(accommodationBooking.getExtraPay())
             .capacity(accommodationBooking.getCapacity())
             .roomName(accommodationBooking.getRoom().getName())
+            .roomID(accommodationBooking.getRoom().getRoomID())
+            .roomTypeID(accommodationBooking.getRoomTypeID())
             .createdDate(accommodationBooking.getCreatedDate())
             .updatedDate(accommodationBooking.getUpdatedDate())
+            .propertyName(getBookingProperty(bookedRoom).getPropertyName())
             .build();
     }
 }

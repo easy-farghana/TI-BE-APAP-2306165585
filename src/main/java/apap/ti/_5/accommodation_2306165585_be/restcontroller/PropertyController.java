@@ -18,11 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 import apap.ti._5.accommodation_2306165585_be.exception.NotFoundException;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.property.PropertyTransactionRequest;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.property.UpdatePropertyTransactionRequest;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.room.AddMaintenanceRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype.ListAddRoomTypeRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.property.AllPropertyResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.property.PropertyResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.service.property.PropertyService;
+import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
 
 @RestController
@@ -35,6 +37,9 @@ public class PropertyController {
     @Autowired
     PropertyService propertyService;
 
+    @Autowired
+    RoomService roomService;
+
     public static final String BASE_URL = "/property";
     public static final String VIEW_ALL_ACTIVE = "/property-active";
     public static final String VIEW_PROPERTY = BASE_URL + "/{propertyId}";
@@ -42,6 +47,8 @@ public class PropertyController {
     public static final String UPDATE_PROPERTY = BASE_URL + "/update";
     public static final String DELETE_PROPERTY = BASE_URL + "/delete/{propertyId}";
     public static final String ADD_ROOM_TYPE = BASE_URL + "/add-room-type/{propertyId}";
+    public static final String ADD_MAINTENANCE = BASE_URL + "/maintenance/add";
+
 
     @GetMapping(BASE_URL)
     public ResponseEntity<BaseResponseDTO<List<AllPropertyResponseDTO>>> getAllProperty() {
@@ -117,6 +124,15 @@ public class PropertyController {
         return responseUtil.success(
             null,
             "Property with ID " + propertyId + " deleted successfully",
+            HttpStatus.OK
+        );
+    }
+    @PostMapping(ADD_MAINTENANCE)
+    public ResponseEntity<BaseResponseDTO<String>> addMaintenanceToProperty(@RequestBody AddMaintenanceRequestDTO request) {
+        roomService.addMaintenance(request);
+        return responseUtil.success(
+            null,
+            "Maintenance added to property successfully",
             HttpStatus.OK
         );
     }

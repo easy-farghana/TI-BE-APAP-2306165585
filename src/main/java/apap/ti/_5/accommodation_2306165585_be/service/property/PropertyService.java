@@ -10,6 +10,7 @@ import apap.ti._5.accommodation_2306165585_be.restdto.request.property.UpdatePro
 import apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype.ListAddRoomTypeRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.property.AllPropertyResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.property.PropertyResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.statistics.IncomeStatisticsDTO;
 
 public interface PropertyService {
     PropertyResponseDTO createPropertyTransaction(PropertyTransactionRequest request);
@@ -21,4 +22,5 @@ public interface PropertyService {
     PropertyResponseDTO addRoomTypeToProperty(String propertyId, ListAddRoomTypeRequestDTO request);
     PropertyResponseDTO getPropertyById(String propertyId, LocalDateTime checkIn, LocalDateTime checkOut);
     List<AllPropertyResponseDTO> getAllActiveProperties();
+    IncomeStatisticsDTO getIncomeStatistics(int month, int year);
 }

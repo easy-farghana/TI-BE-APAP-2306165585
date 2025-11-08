@@ -13,6 +13,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import apap.ti._5.accommodation_2306165585_be.exception.NotFoundException;
+import apap.ti._5.accommodation_2306165585_be.model.AccommodationBooking;
 import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.model.Room;
 import apap.ti._5.accommodation_2306165585_be.model.RoomType;
@@ -26,6 +27,7 @@ import apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype.UpdateRoo
 import apap.ti._5.accommodation_2306165585_be.restdto.response.property.AllPropertyResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.property.PropertyResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.roomtype.RoomTypeResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.statistics.IncomeStatisticsDTO;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import apap.ti._5.accommodation_2306165585_be.service.roomtype.RoomTypeService;
 import jakarta.transaction.Transactional;
@@ -76,6 +78,43 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         return mapToPropertyDTO(property, checkIn, checkOut);
+    }
+
+    @Override
+    public IncomeStatisticsDTO getIncomeStatistics(int month, int year) {
+        List<Property> properties = propertyRepository.findAll()
+            .stream()
+            .filter(p -> p.getActiveStatus() == 1)
+            .toList();
+
+        List<String> propertyNames = new ArrayList<>();
+        List<Integer> propertyIncomes = new ArrayList<>();
+        int totalIncome = 0;
+
+        for (Property property : properties) {
+            int propertyIncome = 0;
+
+            for (RoomType roomType : property.getListRoomType()) {
+                for (Room room : roomType.getListRoom()) {
+                    for (AccommodationBooking booking : room.getListAccommodationBooking()) {
+                        LocalDateTime checkIn = booking.getCheckInDate();
+                        if (checkIn.getMonthValue() == month && checkIn.getYear() == year) {
+                            propertyIncome += booking.getTotalPrice();
+                        }
+                    }
+                }
+            }
+
+            propertyNames.add(property.getPropertyName());
+            propertyIncomes.add(propertyIncome);
+            totalIncome += propertyIncome;
+        }
+
+        return IncomeStatisticsDTO.builder()
+            .propertyNames(propertyNames)
+            .propertyIncomes(propertyIncomes)
+            .totalIncome(totalIncome)
+            .build();
     }
     
     @Transactional

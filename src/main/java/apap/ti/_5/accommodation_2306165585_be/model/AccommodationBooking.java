@@ -83,6 +83,9 @@ public class AccommodationBooking {
     @JoinColumn(name = "room", referencedColumnName = "room_id", nullable = false)
     private Room room;
 
+    @Column(name = "room_type_id", nullable = false)
+    private String roomTypeID;
+
     @Column(name = "created_date", nullable = false, updatable = false)
     private LocalDateTime createdDate;
 

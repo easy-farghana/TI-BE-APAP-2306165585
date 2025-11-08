@@ -3,7 +3,6 @@ package apap.ti._5.accommodation_2306165585_be.restdto.response.booking;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +28,9 @@ public class AccommodationBookingResponseDTO {
     private int extraPay;
     private int capacity;
     private String roomName;
+    private String roomID;
+    private String roomTypeID;
+    private String propertyName;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
 }

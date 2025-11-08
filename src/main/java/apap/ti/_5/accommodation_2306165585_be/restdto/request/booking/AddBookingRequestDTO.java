@@ -20,7 +20,7 @@ public class AddBookingRequestDTO {
     private String roomID;
 
     @NotBlank(message = "roomTypeId tidak boleh kosong")
-    private String roomTypeId;
+    private String roomTypeID;
 
     @NotNull(message = "checkInDate tidak boleh kosong")
     private LocalDateTime checkInDate;

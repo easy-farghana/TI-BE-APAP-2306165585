@@ -13,6 +13,7 @@ import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.model.Room;
 import apap.ti._5.accommodation_2306165585_be.model.RoomType;
 import apap.ti._5.accommodation_2306165585_be.repository.RoomRepository;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.room.AddMaintenanceRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 
 @Service
@@ -82,6 +83,24 @@ public class RoomServiceImpl implements RoomService {
             .listAccommodationBooking(new ArrayList<>())
             .build();
         return roomRepository.save(room);
+    }
+
+    @Override
+    public void addMaintenance(AddMaintenanceRequestDTO request) {
+        Room room = roomRepository.findById(request.getRoomID()).orElseThrow(
+            () -> new NotFoundException("Room not found with ID: " + request.getRoomID())
+        );
+        
+        if (request.getMaintenanceStart().isAfter(request.getMaintenanceEnd())) {
+            throw new IllegalArgumentException("maintenanceStart must be before maintenanceEnd");
+        }
+
+        if (!isRoomAvailable(room, request.getMaintenanceStart(), request.getMaintenanceEnd())) {
+            throw new IllegalArgumentException("Room is not available for maintenance");
+        }
+        room.setMaintenanceStart(request.getMaintenanceStart());
+        room.setMaintenanceEnd(request.getMaintenanceEnd());
+        roomRepository.save(room);
     }
 
     @Override

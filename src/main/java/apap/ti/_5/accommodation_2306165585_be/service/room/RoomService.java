@@ -6,6 +6,7 @@ import java.util.List;
 import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.model.Room;
 import apap.ti._5.accommodation_2306165585_be.model.RoomType;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.room.AddMaintenanceRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 
 public interface RoomService {
@@ -16,4 +17,5 @@ public interface RoomService {
     Room createRoom(Property property, RoomType roomType);
     void deleteRoom(String roomId);
     boolean isRoomAvailable(Room room, LocalDateTime checkIn, LocalDateTime checkOut);
+    void addMaintenance(AddMaintenanceRequestDTO request);
 }

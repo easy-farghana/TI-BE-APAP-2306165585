@@ -1,26 +1,27 @@
 package apap.ti._5.accommodation_2306165585_be.restcontroller;
 
+import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
-import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
-import apap.ti._5.accommodation_2306165585_be.service.booking.AccommodationBookingService;
-import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
-
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import apap.ti._5.accommodation_2306165585_be.restdto.request.booking.AddBookingRequestDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AllBookingResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.statistics.IncomeStatisticsDTO;
+import apap.ti._5.accommodation_2306165585_be.service.booking.AccommodationBookingService;
+import apap.ti._5.accommodation_2306165585_be.service.property.PropertyService;
+import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
 
 
 
@@ -28,11 +29,9 @@ import apap.ti._5.accommodation_2306165585_be.restdto.request.booking.AddBooking
 @RequestMapping("/api")
 public class AccommodationBookingController {
 
-    @Autowired
-    ResponseUtil responseUtil;
-
-    @Autowired
-    AccommodationBookingService accommodationBookingService;
+    private final ResponseUtil responseUtil;
+    private final AccommodationBookingService accommodationBookingService;
+    private final PropertyService propertyService;
 
     public static final String BASE_URL = "/booking";
     public static final String VIEW_BOOKING = BASE_URL + "/{bookingID}";
@@ -41,12 +40,22 @@ public class AccommodationBookingController {
     public static final String REFUND_BOOKING = BASE_URL + "/refund/{bookingID}"; 
     public static final String CANCEL_BOOKING = BASE_URL + "/cancel/{bookingID}";
     public static final String UPDATE_BOOKING = BASE_URL + "/update/{bookingID}";
+    
+    public AccommodationBookingController(
+        AccommodationBookingService accommodationBookingService,
+        PropertyService propertyService,
+        ResponseUtil responseUtil
+    ) {
 
+        this.accommodationBookingService = accommodationBookingService;
+        this.propertyService = propertyService;
+        this.responseUtil = responseUtil;
+    } 
 
 
     @GetMapping(BASE_URL)
-    public ResponseEntity<BaseResponseDTO<List<AccommodationBookingResponseDTO>>> getAllRoomType() {
-        List<AccommodationBookingResponseDTO> listBooking = accommodationBookingService.getAllAccommodationBookings();
+    public ResponseEntity<BaseResponseDTO<List<AllBookingResponseDTO>>> getAllRoomType() {
+        List<AllBookingResponseDTO> listBooking = accommodationBookingService.getAllAccommodationBookings();
         return responseUtil.success(
             listBooking,
             "List of all accommodation bookings fetched successfully",
@@ -55,7 +64,7 @@ public class AccommodationBookingController {
     }
 
     @GetMapping(VIEW_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> getAccommodationBookingById(@RequestParam String bookingID) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> getAccommodationBookingById(@PathVariable String bookingID) {
         AccommodationBookingResponseDTO accommodationBooking = accommodationBookingService.getAccommodationBookingById(bookingID);
         return responseUtil.success(
             accommodationBooking,
@@ -110,6 +119,24 @@ public class AccommodationBookingController {
         return responseUtil.success(canceledBooking,
             "Accommodation booking cancelled successfully",
             HttpStatus.CREATED
+        );
+    }
+
+    @GetMapping(BASE_URL + "/chart")
+    public ResponseEntity<BaseResponseDTO<IncomeStatisticsDTO>> getIncomeStatistics(
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year) {
+
+        LocalDate now = LocalDate.now();
+        int targetMonth = (month != null) ? month : now.getMonthValue();
+        int targetYear = (year != null) ? year : now.getYear();
+
+        IncomeStatisticsDTO stats = propertyService.getIncomeStatistics(targetMonth, targetYear);
+
+        return responseUtil.success(
+            stats,
+            String.format("Income statistics for %02d/%d fetched successfully", targetMonth, targetYear),
+            HttpStatus.OK
         );
     }
 }
