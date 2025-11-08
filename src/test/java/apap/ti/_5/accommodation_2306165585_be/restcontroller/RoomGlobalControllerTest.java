@@ -97,7 +97,7 @@ public class RoomGlobalControllerTest {
                 .andExpect(jsonPath("$.message").value("List of all rooms fetched successfully"))
                 .andExpect(jsonPath("$.data.length()").value(2))
                 .andExpect(jsonPath("$.data[0].name").value("101"))
-                .andExpect(jsonPath("$.data[1].roomNumber").value("102"));
+                .andExpect(jsonPath("$.data[1].name").value("102"));
 
         verify(roomService, times(1)).getAllRooms();
     }
