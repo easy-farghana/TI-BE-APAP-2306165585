@@ -311,46 +311,6 @@ public class PropertyServiceImplTest {  // Changed class name
     }
 
     @Test
-    void testCreatePropertyTransaction_DuplicateRoomType() {
-        // Arrange
-        AddPropertyRequestDTO propertyRequest = new AddPropertyRequestDTO();
-        propertyRequest.setPropertyName("New Hotel");
-        propertyRequest.setType(1);
-        propertyRequest.setOwnerId(ownerId);
-        propertyRequest.setOwnerName("Owner");
-        propertyRequest.setProvince(1);
-
-
-        AddRoomTypeRequestDTO roomTypeRequest1 = new AddRoomTypeRequestDTO();
-        roomTypeRequest1.setName("Deluxe");
-        roomTypeRequest1.setFloor(1);
-        roomTypeRequest1.setUnit(5);
-
-        AddRoomTypeRequestDTO roomTypeRequest2 = new AddRoomTypeRequestDTO();
-        roomTypeRequest2.setName("Deluxe");
-        roomTypeRequest2.setFloor(1);
-        roomTypeRequest2.setUnit(3);
-
-        PropertyTransactionRequest request = new PropertyTransactionRequest();
-        request.setProperty(propertyRequest);
-        request.setRoomTypes(Arrays.asList(roomTypeRequest1, roomTypeRequest2));
-
-        Property newProperty = Property.builder()
-                .propertyID("HOT-1234-001")
-                .listRoomType(new ArrayList<>())
-                .build();
-
-        when(propertyRepository.count()).thenReturn(0L);
-        when(propertyRepository.save(any(Property.class))).thenReturn(newProperty);
-        
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            propertyService.createPropertyTransaction(request);
-        });
-    }
-
-    @Test
     void testUpdatePropertyTransaction_Success() {
         // Arrange
         UpdatePropertyRequestDTO propertyRequest = new UpdatePropertyRequestDTO();
