@@ -47,6 +47,14 @@ public class PropertyServiceImpl implements PropertyService {
             .map(this::mapToAllPropertyDTO)
             .toList();
     }
+    
+    @Override
+    public List<AllPropertyResponseDTO> getAllActiveProperties() {
+        List<Property> properties = propertyRepository.findAllActive();
+        return properties.stream()
+            .map(this::mapToAllPropertyDTO)
+            .toList();
+    }
 
     @Override
     public PropertyResponseDTO getPropertyById(String propertyId) {

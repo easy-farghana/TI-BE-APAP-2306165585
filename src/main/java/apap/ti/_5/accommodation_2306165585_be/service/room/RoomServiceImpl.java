@@ -152,8 +152,11 @@ public class RoomServiceImpl implements RoomService {
             .availabilityStatus(availabilityStatus)
             .build();
     }
+    
+    
 
-    private boolean isRoomAvailable(Room room, LocalDateTime checkIn, LocalDateTime checkOut) {
+    @Override
+    public boolean isRoomAvailable(Room room, LocalDateTime checkIn, LocalDateTime checkOut) {
         List<AccommodationBooking> bookings = room.getListAccommodationBooking();
         for (AccommodationBooking booking : bookings) {
             if (booking.getStatus() != 2 && 

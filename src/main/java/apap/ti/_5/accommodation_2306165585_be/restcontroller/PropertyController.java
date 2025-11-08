@@ -36,6 +36,7 @@ public class PropertyController {
     PropertyService propertyService;
 
     public static final String BASE_URL = "/property";
+    public static final String VIEW_ALL_ACTIVE = "/property-active";
     public static final String VIEW_PROPERTY = BASE_URL + "/{propertyId}";
     public static final String CREATE_PROPERTY = BASE_URL + "/create";
     public static final String UPDATE_PROPERTY = BASE_URL + "/update";
@@ -45,6 +46,16 @@ public class PropertyController {
     @GetMapping(BASE_URL)
     public ResponseEntity<BaseResponseDTO<List<AllPropertyResponseDTO>>> getAllProperty() {
         List<AllPropertyResponseDTO> listProperty = propertyService.getAllProperties();
+        return responseUtil.success(
+            listProperty,
+            "List of all properties fetched successfully",
+            HttpStatus.OK
+        );
+    }
+
+    @GetMapping(VIEW_ALL_ACTIVE)
+    public ResponseEntity<BaseResponseDTO<List<AllPropertyResponseDTO>>> getAllActivePropertyProperty() {
+        List<AllPropertyResponseDTO> listProperty = propertyService.getAllActiveProperties();
         return responseUtil.success(
             listProperty,
             "List of all properties fetched successfully",

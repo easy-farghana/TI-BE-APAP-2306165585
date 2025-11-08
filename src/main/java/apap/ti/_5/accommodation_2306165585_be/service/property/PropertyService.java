@@ -20,4 +20,5 @@ public interface PropertyService {
     void deleteProperty(String propertyId);
     PropertyResponseDTO addRoomTypeToProperty(String propertyId, ListAddRoomTypeRequestDTO request);
     PropertyResponseDTO getPropertyById(String propertyId, LocalDateTime checkIn, LocalDateTime checkOut);
+    List<AllPropertyResponseDTO> getAllActiveProperties();
 }
