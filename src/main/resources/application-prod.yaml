@@ -1,0 +1,37 @@
+spring:
+    config:
+        import: optional:file:.env[.properties]
+    datasource:
+        url: ${DATABASE_URL_PROD}
+        username: ${DATABASE_USERNAME}
+        password: ${DATABASE_PASSWORD}
+
+logging:
+    level:
+        root: INFO
+        apap.ti._5.accommodation_2306165585_be: INFO
+        org:
+            springframework:
+                web: WARN
+                security: WARN
+                boot: INFO
+                context: WARN
+                beans: WARN
+                orm: WARN
+            hibernate:
+                SQL: WARN
+                type: WARN
+                engine: WARN
+                internal: WARN
+            postgresql: WARN
+            apache: WARN
+            tomcat: WARN
+        jakarta: WARN
+        com:
+            zaxxer: WARN
+    pattern:
+        console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file:
+        name: logs/dev-app.log
+        max-size: 10MB
+        max-history: 5

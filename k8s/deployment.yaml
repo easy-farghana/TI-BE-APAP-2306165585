@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accommodation-be
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: accommodation-be
+  template:
+    metadata:
+      labels:
+        app: accommodation-be
+    spec:
+      containers:
+        - name: springboot-container
+          image: mhibrizif/accommodation-be:REPLACE_ME_TAG
+          ports:
+            - containerPort: 8082
+          env:
+            - name: DATABASE_URL_PROD
+              valueFrom:
+                configMapKeyRef:
+                  name: accommodation-be-config
+                  key: DATABASE_URL_PROD
+            - name: DATABASE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: accommodation-be-config
+                  key: DATABASE_USERNAME
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: accommodation-be-secret
+                  key: DATABASE_PASSWORD
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: accommodation-be-secret
+                  key: JWT_SECRET_KEY

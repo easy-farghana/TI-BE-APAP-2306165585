@@ -1,4 +1,10 @@
+server:
+    port: 8082
+
 spring:
+    main:
+        allow-circular-references: true
+        
     application:
         name: accommodation-be
 
