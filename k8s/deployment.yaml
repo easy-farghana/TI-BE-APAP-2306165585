@@ -34,8 +34,3 @@ spec:
                 secretKeyRef:
                   name: accommodation-be-secret
                   key: DATABASE_PASSWORD
-            - name: JWT_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: accommodation-be-secret
-                  key: JWT_SECRET_KEY
