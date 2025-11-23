@@ -1,15 +1,11 @@
 package apap.ti._5.accommodation_2306165585_be.service.booking;
 
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -299,7 +295,6 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         }
 
         
-        property.setIncome(income + booking.getTotalPrice());
         propertyRepository.save(property);
         booking.setStatus(1);
 
