@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/praktikum-9
+      - deploy
 
 env:
   DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_IMAGE_NAME }}
