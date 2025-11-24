@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccommodationBookingResponseDTO {
-    private String bookingID;
+    private UUID bookingID;
     private LocalDateTime checkInDate;
     private LocalDateTime checkOutDate;
     private int totalDays;
@@ -28,8 +28,9 @@ public class AccommodationBookingResponseDTO {
     private int extraPay;
     private int capacity;
     private String roomName;
-    private String roomID;
-    private String roomTypeID;
+    private UUID roomID;
+    private UUID roomTypeID;
+    private UUID propertyID;
     private String propertyName;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;

@@ -19,4 +19,12 @@ spring:
     jpa:
         hibernate:
             ddl-auto: create-drop
-    
+
+accommodation-be:
+    app:
+        jwtSecret: "${JWT_SECRET_KEY}"
+        jwtExpirationMs: 86400000  
+
+external:
+    profile-service-url: "http://localhost:8081"
+    auth-service-url: "http://localhost:8081"

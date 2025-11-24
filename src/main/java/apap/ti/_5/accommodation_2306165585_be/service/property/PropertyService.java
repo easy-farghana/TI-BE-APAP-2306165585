@@ -2,6 +2,8 @@ package apap.ti._5.accommodation_2306165585_be.service.property;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.property.AddPropertyRequestDTO;
@@ -17,10 +19,12 @@ public interface PropertyService {
     PropertyResponseDTO updatePropertyTransaction(UpdatePropertyTransactionRequest request);
     Property createProperty(AddPropertyRequestDTO request);
     List<AllPropertyResponseDTO> getAllProperties();
-    PropertyResponseDTO getPropertyById(String propertyId);
-    void deleteProperty(String propertyId);
-    PropertyResponseDTO addRoomTypeToProperty(String propertyId, ListAddRoomTypeRequestDTO request);
-    PropertyResponseDTO getPropertyById(String propertyId, LocalDateTime checkIn, LocalDateTime checkOut);
+    List<AllPropertyResponseDTO> getAllProperties(Map<String, Object> params);
+    PropertyResponseDTO getPropertyById(UUID propertyId);
+    void deleteProperty(UUID propertyId);
+    PropertyResponseDTO addRoomTypeToProperty(UUID propertyId, ListAddRoomTypeRequestDTO request);
+    PropertyResponseDTO getPropertyById(UUID propertyId, LocalDateTime checkIn, LocalDateTime checkOut);
     List<AllPropertyResponseDTO> getAllActiveProperties();
     IncomeStatisticsDTO getIncomeStatistics(int month, int year);
+    List<AllPropertyResponseDTO> getAllActiveProperties(Map<String, Object> params);
 }

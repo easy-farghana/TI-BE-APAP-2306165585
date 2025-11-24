@@ -8,6 +8,8 @@ import org.hibernate.annotations.Check;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -28,8 +30,9 @@ import lombok.NoArgsConstructor;
 public class AccommodationBooking {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "booking_id", updatable = false, nullable = false)
-    private String bookingID;
+    private UUID bookingID;
 
     @Column(name = "check_in_date", nullable = false)
     private LocalDateTime checkInDate;
@@ -82,9 +85,6 @@ public class AccommodationBooking {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "room", referencedColumnName = "room_id", nullable = false)
     private Room room;
-
-    @Column(name = "room_type_id", nullable = false)
-    private String roomTypeID;
 
     @Column(name = "created_date", nullable = false, updatable = false)
     private LocalDateTime createdDate;

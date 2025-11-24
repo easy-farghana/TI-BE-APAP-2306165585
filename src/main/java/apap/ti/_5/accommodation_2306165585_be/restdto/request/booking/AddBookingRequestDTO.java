@@ -16,11 +16,8 @@ import lombok.NoArgsConstructor;
 @Data
 public class AddBookingRequestDTO {
     
-    @NotBlank(message = "roomID tidak boleh kosong")
-    private String roomID;
-
-    @NotBlank(message = "roomTypeId tidak boleh kosong")
-    private String roomTypeID;
+    @NotNull(message = "roomID tidak boleh kosong")
+    private UUID roomID;
 
     @NotNull(message = "checkInDate tidak boleh kosong")
     private LocalDateTime checkInDate;

@@ -1,6 +1,9 @@
 package apap.ti._5.accommodation_2306165585_be.restcontroller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -50,9 +53,27 @@ public class PropertyController {
     public static final String ADD_MAINTENANCE = BASE_URL + "/maintenance/add";
 
 
+    /**
+     * Fetch list of all properties based on given parameters.
+     * 
+     * @param name Name of the property.
+     * @param type Type of the property.
+     * @param province Province of the property.
+     * @return ResponseEntity containing list of all properties.
+     */
     @GetMapping(BASE_URL)
-    public ResponseEntity<BaseResponseDTO<List<AllPropertyResponseDTO>>> getAllProperty() {
-        List<AllPropertyResponseDTO> listProperty = propertyService.getAllProperties();
+    public ResponseEntity<BaseResponseDTO<List<AllPropertyResponseDTO>>> getAllProperty(
+        @RequestParam(value = "name", required = false) String name,
+        @RequestParam(value = "type", required = false) Integer type,
+        @RequestParam(value = "province", required = false) Integer province
+    ) {
+        
+        Map<String, Object> params = new HashMap<>();
+        if (name != null) params.put("name", name);
+        if (type != null) params.put("type", type);
+        if (province != null) params.put("province", province);
+
+        List<AllPropertyResponseDTO> listProperty = propertyService.getAllProperties(params);
         return responseUtil.success(
             listProperty,
             "List of all properties fetched successfully",
@@ -60,9 +81,25 @@ public class PropertyController {
         );
     }
 
+    /**
+     * Fetch list of all active properties based on given parameters.
+     * 
+     * @param name Name of the property.
+     * @param type Type of the property.
+     * @param province Province of the property.
+     * @return ResponseEntity containing list of all active properties.
+     */
     @GetMapping(VIEW_ALL_ACTIVE)
-    public ResponseEntity<BaseResponseDTO<List<AllPropertyResponseDTO>>> getAllActivePropertyProperty() {
-        List<AllPropertyResponseDTO> listProperty = propertyService.getAllActiveProperties();
+    public ResponseEntity<BaseResponseDTO<List<AllPropertyResponseDTO>>> getAllActiveProperty(
+        @RequestParam(value = "name", required = false) String name,
+        @RequestParam(value = "type", required = false) Integer type,
+        @RequestParam(value = "province", required = false) Integer province
+    ) {
+        Map<String, Object> params = new HashMap<>();
+        if (name != null) params.put("name", name);
+        if (type != null) params.put("type", type);
+        if (province != null) params.put("province", province);
+        List<AllPropertyResponseDTO> listProperty = propertyService.getAllActiveProperties(params);
         return responseUtil.success(
             listProperty,
             "List of all properties fetched successfully",
@@ -71,11 +108,23 @@ public class PropertyController {
     }
     
 
+    /**
+     * Retrieves a property by its ID.
+     * If check-in and check-out dates are provided, it also checks if the property is available between the given dates.
+     * 
+     * @param propertyId The ID of the property to be retrieved.
+     * @param checkIn The check-in date.
+     * @param checkOut The check-out date.
+     * @return The PropertyResponseDTO of the retrieved property.
+     * @throws NotFoundException If the property is not found with the given ID.
+     * @throws IllegalArgumentException If the check-in date is after the check-out date.
+     */
     @GetMapping(VIEW_PROPERTY)
     public ResponseEntity<BaseResponseDTO<PropertyResponseDTO>> getPropertyById(
-        @PathVariable String propertyId, 
+        @PathVariable UUID propertyId, 
         @RequestParam(required = false) String checkIn, 
-        @RequestParam(required = false) String checkOut) {
+        @RequestParam(required = false) String checkOut
+    ) {
 
         PropertyResponseDTO propertyDTO;
         if (checkIn != null && checkOut != null) {
@@ -119,7 +168,7 @@ public class PropertyController {
     }
 
     @DeleteMapping(DELETE_PROPERTY)
-    public ResponseEntity<BaseResponseDTO<String>> deleteProperty(@PathVariable String propertyId) {
+    public ResponseEntity<BaseResponseDTO<String>> deleteProperty(@PathVariable UUID propertyId) {
         propertyService.deleteProperty(propertyId);
         return responseUtil.success(
             null,
@@ -139,7 +188,7 @@ public class PropertyController {
 
     @PostMapping(ADD_ROOM_TYPE)
     public ResponseEntity<BaseResponseDTO<PropertyResponseDTO>> addRoomTypeToProperty(
-        @PathVariable String propertyId,
+        @PathVariable UUID propertyId,
         @RequestBody ListAddRoomTypeRequestDTO request
     ) {
         PropertyResponseDTO propertyDTO = propertyService.addRoomTypeToProperty(propertyId, request);

@@ -2,6 +2,7 @@ package apap.ti._5.accommodation_2306165585_be.service.room;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.model.Room;
@@ -15,7 +16,7 @@ public interface RoomService {
     List<RoomResponseDTO> getRoomsByRoomType(RoomType roomType);
     List<RoomResponseDTO> getRoomsByRoomType(RoomType roomType, LocalDateTime checkIn, LocalDateTime checkOut);
     Room createRoom(Property property, RoomType roomType);
-    void deleteRoom(String roomId);
+    void deleteRoom(UUID roomId);
     boolean isRoomAvailable(Room room, LocalDateTime checkIn, LocalDateTime checkOut);
     void addMaintenance(AddMaintenanceRequestDTO request);
 }

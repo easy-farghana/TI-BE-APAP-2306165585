@@ -1,5 +1,6 @@
 package apap.ti._5.accommodation_2306165585_be.restdto.request.room;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class AddMaintenanceRequestDTO {
     @NotBlank
-    private String roomID;
+    private UUID roomID;
 
     @NotNull(message = "maintenanceStart wajib diisi")
     private LocalDateTime maintenanceStart;

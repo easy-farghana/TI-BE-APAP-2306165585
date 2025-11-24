@@ -2,14 +2,17 @@ package apap.ti._5.accommodation_2306165585_be.model;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -27,9 +30,14 @@ import lombok.NoArgsConstructor;
 public class RoomType {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "room_type_id", updatable = false, nullable = false)
-    private String roomTypeID;
-    
+    private UUID roomTypeID;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "property", nullable = false)
+    private Property property;
+
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -48,11 +56,9 @@ public class RoomType {
     @Column(name = "floor")
     private int floor;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "roomtype_room",
-        joinColumns = @JoinColumn(name = "room_type_id"),
-        inverseJoinColumns = @JoinColumn(name = "room_id")
+    @OneToMany(
+        mappedBy = "roomType", 
+        fetch = FetchType.LAZY
     )
     private List<Room> listRoom;
 

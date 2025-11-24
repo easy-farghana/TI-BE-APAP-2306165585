@@ -2,12 +2,14 @@ package apap.ti._5.accommodation_2306165585_be.service.roomtype;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import apap.ti._5.accommodation_2306165585_be.exception.NotFoundException;
 import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.model.RoomType;
 import apap.ti._5.accommodation_2306165585_be.repository.RoomTypeRepository;
@@ -35,6 +37,14 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     }
 
     @Override
+    public RoomTypeResponseDTO getRoomTypeById(UUID roomTypeId) {
+        RoomType roomType = roomTypeRepository.findById(roomTypeId).orElseThrow(
+            () -> new NotFoundException("Room type with id " + roomTypeId + " not found.")
+        );
+        return mapToRoomTypeDTO(roomType);
+    }
+
+    @Override
     public List<RoomTypeResponseDTO> getRoomTypesByProperty(Property property) {
         return property.getListRoomType().stream()
             .map(this::mapToRoomTypeDTO)
@@ -49,12 +59,8 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     }
 
     @Override
-    public RoomType createRoomType(AddRoomTypeRequestDTO request, String propertyId) {
-        String propertyNumber = propertyId.substring(9, 12);
-        String roomTypeId = String.format("%s-%s-%d", propertyNumber, request.getName(), request.getFloor());
-
+    public RoomType createRoomType(AddRoomTypeRequestDTO request, Property property) {
         RoomType roomType = RoomType.builder()
-            .roomTypeID(roomTypeId)
             .name(request.getName())
             .price(request.getPrice())
             .description(request.getDescription())
@@ -62,7 +68,9 @@ public class RoomTypeServiceImpl implements RoomTypeService {
             .facility(request.getFacility())
             .floor(request.getFloor())
             .listRoom(new ArrayList<>())
+            .property(property)
             .build();
+
         return roomTypeRepository.save(roomType);
     }
 

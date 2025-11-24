@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ public class AccommodationBookingControllerTest {
     @BeforeEach
     void setUp() {
         bookingResponse = new AccommodationBookingResponseDTO();
-        bookingResponse.setBookingID("B001");
+        bookingResponse.setBookingID(UUID.randomUUID());
         bookingResponse.setCustomerName("William Cruise");
         bookingResponse.setTotalDays(2);
         bookingResponse.setTotalPrice(1250000);
@@ -82,7 +83,7 @@ public class AccommodationBookingControllerTest {
 
     @Test
     void testGetBookingById_Success() throws Exception {
-        String bookingID = "B001";
+        UUID bookingID = UUID.randomUUID();
         when(accommodationBookingService.getAccommodationBookingById(bookingID)).thenReturn(bookingResponse);
 
         mockMvc.perform(get("/api/booking/{bookingID}", bookingID)
@@ -110,7 +111,7 @@ public class AccommodationBookingControllerTest {
 
     @Test
     void testUpdateBooking_Success() throws Exception {
-        String bookingID = "B001";
+        UUID bookingID = UUID.randomUUID();
         when(accommodationBookingService.updateBooking(eq(bookingID), any(AddBookingRequestDTO.class))).thenReturn(bookingResponse);
 
         mockMvc.perform(put("/api/booking/update/{bookingID}", bookingID)
@@ -125,7 +126,7 @@ public class AccommodationBookingControllerTest {
 
     @Test
     void testPayBooking_Success() throws Exception {
-        String bookingID = "B001";
+        UUID bookingID = UUID.randomUUID();
         when(accommodationBookingService.payBooking(bookingID)).thenReturn(bookingResponse);
 
         mockMvc.perform(post("/api/booking/pay/{bookingID}", bookingID)
@@ -138,7 +139,7 @@ public class AccommodationBookingControllerTest {
 
     @Test
     void testRefundBooking_Success() throws Exception {
-        String bookingID = "B001";
+        UUID bookingID = UUID.randomUUID();
         when(accommodationBookingService.giveRefund(bookingID)).thenReturn(bookingResponse);
 
         mockMvc.perform(post("/api/booking/refund/{bookingID}", bookingID)
@@ -151,7 +152,7 @@ public class AccommodationBookingControllerTest {
 
     @Test
     void testCancelBooking_Success() throws Exception {
-        String bookingID = "B001";
+        UUID bookingID = UUID.randomUUID();
         when(accommodationBookingService.cancelBooking(bookingID)).thenReturn(bookingResponse);
 
         mockMvc.perform(post("/api/booking/cancel/{bookingID}", bookingID)

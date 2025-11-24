@@ -58,11 +58,16 @@ public class PropertyControllerTest {
     private UpdateRoomTypeRequestDTO updateRoomTypeRequestDTO;
     private ListAddRoomTypeRequestDTO addRoomTypeRequest;
     private AddMaintenanceRequestDTO addMaintenanceRequest;
+    private UUID propertyId1;
+    private UUID propertyId2;
 
     @BeforeEach
     void setUp() {
+        propertyId1 = UUID.randomUUID();
+        propertyId2 = UUID.randomUUID();
+
         allPropertyResponseDTO1 = AllPropertyResponseDTO.builder()
-                .propertyID("property-1")
+                .propertyID(propertyId1)
                 .propertyName("Hotel Paradise")
                 .type(1)
                 .totalRooms(50)
@@ -70,7 +75,7 @@ public class PropertyControllerTest {
                 .build();
 
         allPropertyResponseDTO2 = AllPropertyResponseDTO.builder()
-                .propertyID("property-2")
+                .propertyID(propertyId2)
                 .propertyName("Beach Resort")
                 .type(2)
                 .totalRooms(30)
@@ -78,7 +83,7 @@ public class PropertyControllerTest {
                 .build();
 
         propertyResponseDTO = PropertyResponseDTO.builder()
-                .propertyID("property-1")
+                .propertyID(propertyId1)
                 .propertyName("Hotel Paradise")
                 .type(1)
                 .address("123 Main St")
@@ -135,7 +140,7 @@ public class PropertyControllerTest {
 
     @Test
     void testGetPropertyById_Success() throws Exception {
-        String propertyId = "property-1";
+        UUID propertyId = this.propertyId1;
         when(propertyService.getPropertyById(propertyId)).thenReturn(propertyResponseDTO);
 
         mockMvc.perform(get("/api/property/{propertyId}", propertyId)
@@ -148,7 +153,7 @@ public class PropertyControllerTest {
 
     @Test
     void testGetPropertyById_WithDates_Success() throws Exception {
-        String propertyId = "property-1";
+        UUID propertyId = this.propertyId1;
         String checkIn = "2024-12-01T14:00:00";
         String checkOut = "2024-12-05T11:00:00";
         when(propertyService.getPropertyById(propertyId, LocalDateTime.parse(checkIn), LocalDateTime.parse(checkOut)))
@@ -166,7 +171,7 @@ public class PropertyControllerTest {
 
     @Test
     void testGetPropertyById_NotFound() throws Exception {
-        String propertyId = "not-found";
+        UUID propertyId = UUID.randomUUID();
         when(propertyService.getPropertyById(propertyId)).thenReturn(null);
 
         mockMvc.perform(get("/api/property/{propertyId}", propertyId)
@@ -206,7 +211,7 @@ public class PropertyControllerTest {
 
     @Test
     void testDeleteProperty_Success() throws Exception {
-        String propertyId = "property-1";
+        UUID propertyId = this.propertyId1;
         doNothing().when(propertyService).deleteProperty(propertyId);
 
         mockMvc.perform(delete("/api/property/delete/{propertyId}", propertyId))
@@ -218,7 +223,7 @@ public class PropertyControllerTest {
 
     @Test
     void testAddRoomType_Success() throws Exception {
-        String propertyId = "property-1";
+        UUID propertyId = this.propertyId1;
         when(propertyService.addRoomTypeToProperty(eq(propertyId), any(ListAddRoomTypeRequestDTO.class)))
                 .thenReturn(propertyResponseDTO);
 

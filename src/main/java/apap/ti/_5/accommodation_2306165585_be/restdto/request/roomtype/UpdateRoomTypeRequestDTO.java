@@ -1,5 +1,7 @@
 package apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype;
 
+import java.util.UUID;
+
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class UpdateRoomTypeRequestDTO {
     @NotNull(message = "ID tipe kamar wajib diisi")
-    private String roomTypeID;
+    private UUID roomTypeID;
 
     @NotBlank(message = "Fasilitas wajib diisi")
     private String facility;

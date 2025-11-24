@@ -6,12 +6,13 @@ import java.util.UUID;
 
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
-import jakarta.persistence.CascadeType;
+import jakarta.annotation.Generated;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
@@ -33,8 +34,9 @@ import lombok.NoArgsConstructor;
 public class Property {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "property_id", updatable = false, nullable = false)
-    private String propertyID;
+    private UUID propertyID;
 
     @Column(name = "property_name", nullable = false)
     private String propertyName;
@@ -68,8 +70,10 @@ public class Property {
     @Column(name = "income")
     private int income;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "property_id")
+    @OneToMany(
+        mappedBy = "property", 
+        fetch = FetchType.LAZY
+    )
     private List<RoomType> listRoomType;
 
     @Column(name = "owner_name")

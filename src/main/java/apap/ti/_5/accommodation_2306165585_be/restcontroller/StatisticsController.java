@@ -34,6 +34,13 @@ public class StatisticsController {
     
     public static final String BASE_URL = "/statistics";
 
+    /**
+     * GET /api/statistics
+     * Get statistics of the accommodation including total number of properties and bookings.
+     * @return ResponseEntity<BaseResponseDTO<HomeStatisticsDTO>> response
+     * @see HomeStatisticsDTO
+     * @see ResponseUtil
+     */
     @GetMapping(BASE_URL)
     public ResponseEntity<BaseResponseDTO<HomeStatisticsDTO>> getStatistics() {
         List<AllPropertyResponseDTO> properties = propertyService.getAllProperties();

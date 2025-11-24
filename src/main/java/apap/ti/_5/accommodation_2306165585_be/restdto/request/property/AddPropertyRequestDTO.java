@@ -38,7 +38,6 @@ public class AddPropertyRequestDTO {
     @NotBlank(message = "Deskripsi wajib diisi")
     private String description;
     
-    @NotNull(message = "ID pemilik wajib diisi")
     private UUID ownerId;
 
     @NotBlank(message = "Nama pemilik wajib diisi")

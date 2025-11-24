@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PropertyResponseDTO {
-    private String propertyID;
+    private UUID propertyID;
     private String propertyName;
     private int type;
     private String address;

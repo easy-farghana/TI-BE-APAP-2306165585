@@ -1,5 +1,7 @@
 package apap.ti._5.accommodation_2306165585_be.restdto.request.property;
 
+import java.util.UUID;
+
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class UpdatePropertyRequestDTO {
     @NotNull(message = "ID properti wajib diisi")
-    private String propertyId;
+    private UUID propertyId;
 
     @NotBlank(message = "Nama properti wajib diisi")
     private String propertyName;

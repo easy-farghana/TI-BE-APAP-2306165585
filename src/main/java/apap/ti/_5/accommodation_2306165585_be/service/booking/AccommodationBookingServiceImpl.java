@@ -2,10 +2,10 @@ package apap.ti._5.accommodation_2306165585_be.service.booking;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -35,8 +35,6 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
     private final RoomTypeRepository roomTypeRepository;
     private final PropertyRepository propertyRepository;
 
-
-    
     public AccommodationBookingServiceImpl(
         AccommodationBookingRepository accommodationBookingRepository,
         RoomService roomService,
@@ -53,29 +51,15 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
 
    @Override
     public List<AllBookingResponseDTO> getAllAccommodationBookings() {
-        List<Object[]> rows = bookingRepository.findAllBookingsWithPropertyInfo();
-        List<AllBookingResponseDTO> results = new ArrayList<>();
-
-        for (Object[] row : rows) {
-            AllBookingResponseDTO dto = new AllBookingResponseDTO();
-            dto.setBookingID((String) row[0]);
-            dto.setRoomName((String) row[1]);
-            dto.setPropertyName((String) row[2]);
-            dto.setStatus((Integer) row[3]);
-            dto.setCheckInDate(((Timestamp) row[4]).toLocalDateTime());
-            dto.setCheckOutDate(((Timestamp) row[5]).toLocalDateTime());
-            dto.setTotalPrice((Integer) row[6]);
-            results.add(dto);
-        }
-
-        return results;
+        List<AccommodationBooking> bookings = bookingRepository.findAll();
+        
+        return bookings.stream()
+                .map(this::mapToAllBookingDTO)
+                .toList();
     }
 
-
-
-
     @Override 
-    public AccommodationBookingResponseDTO getAccommodationBookingById(String id) {
+    public AccommodationBookingResponseDTO getAccommodationBookingById(UUID id) {
         AccommodationBooking booking = bookingRepository.findById(id).orElseThrow(
             () -> new NotFoundException("Booking not found with ID: " + id)
         );
@@ -84,25 +68,18 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
 
     @Override
     public AccommodationBookingResponseDTO createBooking(AddBookingRequestDTO request) {
-        String roomId = request.getRoomID();
-        Room room = roomRepository.findById(roomId).orElseThrow(
-            () -> new NotFoundException("Room not found with ID: " + roomId)
+        Room room = roomRepository.findById(request.getRoomID()).orElseThrow(
+            () -> new NotFoundException("Room not found with ID: " + request.getRoomID())
         );
+
         LocalDateTime checkInDate = request.getCheckInDate();
         LocalDateTime checkOutDate = request.getCheckOutDate();
 
-        RoomType roomType = roomTypeRepository.findById(request.getRoomTypeID()).orElseThrow(
-                    () -> new NotFoundException("Room type not found with ID: " + request.getRoomTypeID())
-                );
+        RoomType roomType = room.getRoomType();
 
         validateBookingRequest(request, room, roomType, false, null);
         
-        String lastSevenChars = roomId.substring(roomId.length() - 7); 
-        LocalDateTime bookingCreatedTime = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
-        String timestamp = bookingCreatedTime.format(formatter);
-        String bookingID = String.format("BOOK-%s-%s", lastSevenChars, timestamp);
-        
+
         int daysStaying = (int) ChronoUnit.DAYS.between(
             request.getCheckInDate().toLocalDate(),
             request.getCheckOutDate().toLocalDate()
@@ -114,7 +91,6 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         }
 
         AccommodationBooking booking = AccommodationBooking.builder()
-            .bookingID(bookingID)
             .checkInDate(checkInDate)
             .checkOutDate(checkOutDate)
             .totalDays(daysStaying)
@@ -129,7 +105,6 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
             .customerEmail(request.getCustomerEmail())
             .customerPhone(request.getCustomerPhone())
             .room(room)
-            .roomTypeID(roomType.getRoomTypeID())
             .status(0)
             .build();
         
@@ -138,13 +113,14 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
     }
 
     @Override
-    public AccommodationBookingResponseDTO cancelBooking(String bookingID) {
+    public AccommodationBookingResponseDTO cancelBooking(UUID bookingID) {
         AccommodationBooking booking = bookingRepository.findById(bookingID).orElseThrow(
             () -> new NotFoundException("Booking not found with ID: " + bookingID)
         );
 
         Room room = booking.getRoom();
-        Property property = getBookingProperty(room);
+        RoomType roomType = room.getRoomType();
+        Property property = roomType.getProperty();
         int income = property.getIncome();
 
         if (booking.getStatus() == 0 && booking.getExtraPay() != 0) {
@@ -159,19 +135,16 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
     }
 
     @Override
-    public AccommodationBookingResponseDTO updateBooking(String bookingID, AddBookingRequestDTO request) {
+    public AccommodationBookingResponseDTO updateBooking(UUID bookingID, AddBookingRequestDTO request) {
         AccommodationBooking booking = bookingRepository.findById(bookingID).orElseThrow(
             () -> new NotFoundException("Booking not found with ID: " + bookingID)
         );
 
-        Room newRoom = roomRepository.findById(request.getRoomID()).orElseThrow(
-            () -> new NotFoundException("Room not found with ID: " + request.getRoomID())
+        Room newRoom = roomRepository.findById(request.getRoomID()).orElseThrow(() -> new NotFoundException("Room not found with ID: " + request.getRoomID())
         );
 
-        RoomType newRoomType = roomTypeRepository.findById(request.getRoomTypeID()).orElseThrow(
-            () -> new NotFoundException("Room type not found with ID: " + request.getRoomTypeID())
-        );
-
+        RoomType newRoomType =  newRoom.getRoomType();
+       
         validateBookingRequest(request, newRoom, newRoomType, true, booking.getRoom().getRoomID());
 
         int daysStaying = (int) ChronoUnit.DAYS.between(
@@ -198,24 +171,12 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
             booking.setRefund(0);
         }
         
-        // Update booking ID if room changed
-        if (!booking.getRoom().getRoomID().equals(newRoom.getRoomID())) {
-            String[] parts = booking.getBookingID().split("-", 4);
-            String newLastSevenChars = newRoom.getRoomID()
-                .substring(newRoom.getRoomID().length() - 7);
-            String newBookingID = String.format("BOOK-%s-%s", newLastSevenChars, parts[3]);
-            bookingRepository.delete(booking);
-            booking.setBookingID(newBookingID);
-            
-        }
-
         // Update booking details
         booking.setRoom(newRoom);
         booking.setCheckInDate(request.getCheckInDate());
         booking.setCheckOutDate(request.getCheckOutDate());
         booking.setTotalDays(daysStaying);
         booking.setTotalPrice(oldTotalPrice);
-        booking.setRoomTypeID(newRoomType.getRoomTypeID());
         booking.setCapacity(request.getCapacity());
         booking.setBreakfast(request.getIsBreakfast());
         booking.setCustomerID(request.getCustomerID());
@@ -240,8 +201,9 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
                 .findByCheckInDateBetween(startOfToday, endOfToday);
 
         for (AccommodationBooking booking : todaysBookings) {
-            Room room = booking.getRoom();
-            Property property = getBookingProperty(room);
+            Room room = booking.getRoom();      
+            RoomType roomType = room.getRoomType();
+            Property property = roomType.getProperty();
 
             int income = property.getIncome();
             switch (booking.getStatus()) {
@@ -266,13 +228,14 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
     }
 
     @Override
-    public AccommodationBookingResponseDTO payBooking(String bookingID) {
+    public AccommodationBookingResponseDTO payBooking(UUID bookingID) {
         AccommodationBooking booking = bookingRepository.findById(bookingID).orElseThrow(
             () -> new NotFoundException("Booking not found with ID: " + bookingID)
         );
 
         Room room = booking.getRoom();
-        Property property = getBookingProperty(room);
+        RoomType roomType = room.getRoomType();
+        Property property = roomType.getProperty();
         int income = property.getIncome();
 
         switch (booking.getStatus()) {
@@ -303,13 +266,15 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
     }
 
     @Override
-    public AccommodationBookingResponseDTO giveRefund(String bookingID) {
+    public AccommodationBookingResponseDTO giveRefund(UUID bookingID) {
         AccommodationBooking booking = bookingRepository.findById(bookingID).orElseThrow(
             () -> new NotFoundException("Booking not found with ID: " + bookingID)
         );
         
         Room room = booking.getRoom();
-        Property property = getBookingProperty(room);
+        RoomType roomType = room.getRoomType();
+        Property property = roomType.getProperty();
+
         int income = property.getIncome();
         property.setIncome(income - booking.getRefund());
         propertyRepository.save(property);
@@ -321,20 +286,12 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         return mapToAccommodationBookingDTO(savedBooking);
     }
 
-    private Property getBookingProperty(Room room) {
-        String roomId = room.getRoomID();
-        String propertyId = roomId.substring(0, 12);
-        Property property = propertyRepository.findById(propertyId).orElseThrow(
-            () -> new NotFoundException("Property not found with ID: " + propertyId)
-        );
-        return property;
-    }
     private void validateBookingRequest(
             AddBookingRequestDTO request,
             Room room,
             RoomType roomType,
             boolean isUpdate,
-            String oldRoomId
+            UUID oldRoomId
     ) {
         LocalDateTime checkIn = request.getCheckInDate();
         LocalDateTime checkOut = request.getCheckOutDate();
@@ -368,8 +325,22 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         return totalPrice;
     }
 
+    private AllBookingResponseDTO mapToAllBookingDTO(AccommodationBooking booking) {
+        return AllBookingResponseDTO.builder()
+            .bookingID(booking.getBookingID())
+            .roomName(booking.getRoom().getName())
+            .checkInDate(booking.getCheckInDate())
+            .checkOutDate(booking.getCheckOutDate())
+            .totalPrice(booking.getTotalPrice())
+            .status(booking.getStatus())
+            .build();
+    }
+
     private AccommodationBookingResponseDTO mapToAccommodationBookingDTO(AccommodationBooking accommodationBooking) {
-        Room bookedRoom = accommodationBooking.getRoom(); 
+        Room room = accommodationBooking.getRoom();
+        RoomType roomType = room.getRoomType();
+        Property property = roomType.getProperty();
+
         return AccommodationBookingResponseDTO.builder()
             .bookingID(accommodationBooking.getBookingID())
             .checkInDate(accommodationBooking.getCheckInDate())
@@ -386,11 +357,12 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
             .extraPay(accommodationBooking.getExtraPay())
             .capacity(accommodationBooking.getCapacity())
             .roomName(accommodationBooking.getRoom().getName())
-            .roomID(accommodationBooking.getRoom().getRoomID())
-            .roomTypeID(accommodationBooking.getRoomTypeID())
+            .roomID(room.getRoomID())
+            .roomTypeID(roomType.getRoomTypeID())
             .createdDate(accommodationBooking.getCreatedDate())
             .updatedDate(accommodationBooking.getUpdatedDate())
-            .propertyName(getBookingProperty(bookedRoom).getPropertyName())
+            .propertyID(property.getPropertyID())
+            .propertyName(property.getPropertyName())
             .build();
     }
 }

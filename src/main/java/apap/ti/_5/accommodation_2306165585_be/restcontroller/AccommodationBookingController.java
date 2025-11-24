@@ -2,6 +2,7 @@ package apap.ti._5.accommodation_2306165585_be.restcontroller;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,7 +65,7 @@ public class AccommodationBookingController {
     }
 
     @GetMapping(VIEW_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> getAccommodationBookingById(@PathVariable String bookingID) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> getAccommodationBookingById(@PathVariable UUID bookingID) {
         AccommodationBookingResponseDTO accommodationBooking = accommodationBookingService.getAccommodationBookingById(bookingID);
         return responseUtil.success(
             accommodationBooking,
@@ -84,7 +85,10 @@ public class AccommodationBookingController {
     }
 
     @PutMapping(UPDATE_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> updateAccommodationBooking(@PathVariable String bookingID, @RequestBody AddBookingRequestDTO accommodationBooking) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> updateAccommodationBooking(
+        @PathVariable UUID bookingID, 
+        @RequestBody AddBookingRequestDTO accommodationBooking
+    ) {
         AccommodationBookingResponseDTO updatedAccommodationBooking = accommodationBookingService.updateBooking(bookingID, accommodationBooking);
         return responseUtil.success(
             updatedAccommodationBooking,
@@ -94,7 +98,7 @@ public class AccommodationBookingController {
     }
 
     @PostMapping(PAY_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> payAccommodationBooking(@PathVariable String bookingID) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> payAccommodationBooking(@PathVariable UUID bookingID) {
         AccommodationBookingResponseDTO newAccommodationBooking = accommodationBookingService.payBooking(bookingID);
         return responseUtil.success(
             newAccommodationBooking,
@@ -104,7 +108,7 @@ public class AccommodationBookingController {
     }
 
     @PostMapping(REFUND_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> refundAccommodationBooking(@PathVariable String bookingID) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> refundAccommodationBooking(@PathVariable UUID bookingID) {
         AccommodationBookingResponseDTO newAccommodationBooking = accommodationBookingService.giveRefund(bookingID);
         return responseUtil.success(
             newAccommodationBooking,
@@ -114,7 +118,7 @@ public class AccommodationBookingController {
     }
 
     @PostMapping(CANCEL_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> cancelAccommodationBooking(@PathVariable String bookingID) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> cancelAccommodationBooking(@PathVariable UUID bookingID) {
         AccommodationBookingResponseDTO canceledBooking = accommodationBookingService.cancelBooking(bookingID);
         return responseUtil.success(canceledBooking,
             "Accommodation booking cancelled successfully",

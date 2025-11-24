@@ -1,9 +1,11 @@
 package apap.ti._5.accommodation_2306165585_be.repository;
 
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import apap.ti._5.accommodation_2306165585_be.model.RoomType;
 
-public interface RoomTypeRepository  extends JpaRepository<RoomType, String> {
+public interface RoomTypeRepository  extends JpaRepository<RoomType, UUID> {
     
 }

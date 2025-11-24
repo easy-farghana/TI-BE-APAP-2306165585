@@ -3,6 +3,7 @@ package apap.ti._5.accommodation_2306165585_be.service.room;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -75,13 +76,13 @@ public class RoomServiceImpl implements RoomService {
         }
 
         String roomName = String.format("%d%02d", floor, existingRoomsOnFloor + 1);
-        String roomId = String.format("%s-%s", property.getPropertyID(), roomName);
-        
+
         Room room = Room.builder()
-            .roomID(roomId)
             .name(roomName)
             .listAccommodationBooking(new ArrayList<>())
+            .roomType(roomType)
             .build();
+            
         return roomRepository.save(room);
     }
 
@@ -104,7 +105,7 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public void deleteRoom(String roomId) {
+    public void deleteRoom(UUID roomId) {
         Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new NotFoundException("Room not found with ID: " + roomId));
         room.setActiveRoom(0);

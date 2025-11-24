@@ -2,6 +2,7 @@ package apap.ti._5.accommodation_2306165585_be.model;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.SQLDelete;
@@ -10,7 +11,11 @@ import org.hibernate.annotations.SQLRestriction;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -30,8 +35,13 @@ import lombok.NoArgsConstructor;
 public class Room {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "room_id", updatable = false, nullable = false)
-    private String roomID; 
+    private UUID roomID; 
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "room_type_id", nullable = false)
+    private RoomType roomType;
 
     @Column(name = "name", nullable = false)
     private String name;

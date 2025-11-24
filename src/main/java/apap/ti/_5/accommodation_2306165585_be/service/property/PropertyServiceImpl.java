@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ import apap.ti._5.accommodation_2306165585_be.restdto.response.property.AllPrope
 import apap.ti._5.accommodation_2306165585_be.restdto.response.property.PropertyResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.roomtype.RoomTypeResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.statistics.IncomeStatisticsDTO;
+import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
+import apap.ti._5.accommodation_2306165585_be.security.UserContext;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import apap.ti._5.accommodation_2306165585_be.service.roomtype.RoomTypeService;
 import jakarta.transaction.Transactional;
@@ -42,13 +45,33 @@ public class PropertyServiceImpl implements PropertyService {
     @Autowired
     private RoomService roomService;
 
+    @Autowired
+    UserContext userContext;
+
+    @Override
+    public List<AllPropertyResponseDTO> getAllProperties(Map<String, Object> params) {
+        String name = (String) params.get("name");
+        Integer type = (Integer) params.get("type");
+        Integer province = (Integer) params.get("province");
+
+        // Accommodation owner only gets their own properties
+        UUID ownerID = getOwnerID();
+
+        List<Property> properties = propertyRepository.findByFilters(name, type, province, ownerID);
+
+        return properties.stream()
+                .map(this::mapToAllPropertyDTO)
+                .toList();
+    }
+
     @Override
     public List<AllPropertyResponseDTO> getAllProperties() {
         List<Property> properties = propertyRepository.findAll();
         return properties.stream()
-            .map(this::mapToAllPropertyDTO)
-            .toList();
+                .map(this::mapToAllPropertyDTO)
+                .toList();
     }
+
     
     @Override
     public List<AllPropertyResponseDTO> getAllActiveProperties() {
@@ -59,16 +82,51 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public PropertyResponseDTO getPropertyById(String propertyId) {
+    public List<AllPropertyResponseDTO> getAllActiveProperties(Map<String, Object> params) {
+        String name = (String) params.get("name");
+        Integer type = (Integer) params.get("type");
+        Integer province = (Integer) params.get("province");
+
+        // Accommodation owner only gets their own properties
+        UUID ownerID = getOwnerID();
+
+        List<Property> properties = propertyRepository.findByFiltersAndActive(name, type, province, ownerID);
+
+        return properties.stream()
+                .map(this::mapToAllPropertyDTO)
+                .toList();
+    }
+
+    @Override
+    public PropertyResponseDTO getPropertyById(UUID propertyId) {
         Property property = propertyRepository.findById(propertyId).orElseThrow(
             () -> new NotFoundException("Property not found with ID: " + propertyId)
         );
+        
+        // Accommodation owner only can only see their own properties
+        UUID ownerID = getOwnerID();
+        String role = userContext.getRole();
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !property.getOwnerID().equals(ownerID)) {
+            throw new NotFoundException("Property not found with ID: " + propertyId);
+        }
 
         return mapToPropertyDTO(property);
     }
 
+
+    /**
+     * Retrieves a property by ID, and also checks if the property is available
+     * between the given check-in and check-out dates.
+     *
+     * @param propertyId The ID of the property to be retrieved.
+     * @param checkIn The check-in date.
+     * @param checkOut The check-out date.
+     * @return The PropertyResponseDTO of the retrieved property.
+     * @throws NotFoundException If the property is not found with the given ID.
+     * @throws IllegalArgumentException If the check-in date is after the check-out date.
+     */
     @Override
-    public PropertyResponseDTO getPropertyById(String propertyId, LocalDateTime checkIn, LocalDateTime checkOut) {
+    public PropertyResponseDTO getPropertyById(UUID propertyId, LocalDateTime checkIn, LocalDateTime checkOut) {
         Property property = propertyRepository.findById(propertyId).orElseThrow(
             () -> new NotFoundException("Property not found with ID: " + propertyId)
         );
@@ -132,7 +190,7 @@ public class PropertyServiceImpl implements PropertyService {
                 throw new IllegalArgumentException("Duplicate room type name and floor combination: " 
                     + roomTypeRequest.getName() + " on floor " + roomTypeRequest.getFloor());
             }
-            RoomType roomType = roomTypeService.createRoomType(roomTypeRequest, property.getPropertyID());
+            RoomType roomType = roomTypeService.createRoomType(roomTypeRequest, property);
 
             // Create Rooms for each Room Type
             List<Room> rooms = new ArrayList<>();
@@ -156,7 +214,7 @@ public class PropertyServiceImpl implements PropertyService {
     @Transactional
     @Override
     public PropertyResponseDTO updatePropertyTransaction(UpdatePropertyTransactionRequest request) {
-        String propertyId = request.getProperty().getPropertyId();
+        UUID propertyId = request.getProperty().getPropertyId();
         Property property = propertyRepository.findByIdActive(propertyId)
                 .orElseThrow(() -> new NotFoundException("Property not found with ID: " + propertyId));
 
@@ -166,11 +224,11 @@ public class PropertyServiceImpl implements PropertyService {
         property.setDescription(request.getProperty().getDescription());
 
         // Map existing room types by ID
-        Map<String, RoomType> existingRoomTypeMap = property.getListRoomType().stream()
+        Map<UUID, RoomType> existingRoomTypeMap = property.getListRoomType().stream()
                 .collect(Collectors.toMap(RoomType::getRoomTypeID, rt -> rt));
 
         // Check for missing or extra room types
-        Set<String> requestRoomTypeIds = request.getRoomTypes().stream()
+        Set<UUID> requestRoomTypeIds = request.getRoomTypes().stream()
                 .map(UpdateRoomTypeRequestDTO::getRoomTypeID)
                 .collect(Collectors.toSet());
 
@@ -199,13 +257,17 @@ public class PropertyServiceImpl implements PropertyService {
     @Transactional
     @Override
     public Property createProperty(AddPropertyRequestDTO request) {
-        String typePrefix = getTypePrefix(request.getType());
-        String ownerUuid = request.getOwnerId().toString();
-        String lastFourChars = ownerUuid.substring(ownerUuid.length() - 4);
-        String propertyId = String.format("%s-%s-%03d", typePrefix, lastFourChars, propertyRepository.count() + 1);
+        // Check if its request from an accommodation_owner first
+        UUID ownerID = getOwnerID();
+        if (ownerID != null) {
+            request.setOwnerId(ownerID);
+            request.setOwnerName(userContext.getName());
+        } else if (ownerID == null && request.getOwnerId() == null) {
+            throw new IllegalArgumentException("Missing owner ID");
+        }
+
 
         Property property = Property.builder()
-            .propertyID(propertyId)
             .propertyName(request.getPropertyName())
             .type(request.getType())
             .address(request.getAddress())
@@ -220,7 +282,7 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public PropertyResponseDTO addRoomTypeToProperty(String propertyId, ListAddRoomTypeRequestDTO request) {
+    public PropertyResponseDTO addRoomTypeToProperty(UUID propertyId, ListAddRoomTypeRequestDTO request) {
         Property property = propertyRepository.findByIdActive(propertyId)
             .orElseThrow(() -> new NotFoundException("Property not found or inactive with ID: " + propertyId));
 
@@ -243,7 +305,8 @@ public class PropertyServiceImpl implements PropertyService {
                 throw new IllegalArgumentException("Duplicate room type name and floor combination: " 
                     + req.getName() + " on floor " + req.getFloor());
             }
-            RoomType roomType = roomTypeService.createRoomType(req, property.getPropertyID());
+
+            RoomType roomType = roomTypeService.createRoomType(req, property);
 
             // Create Rooms for each Room Type
             List<Room> rooms = new ArrayList<>();
@@ -268,7 +331,7 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public void deleteProperty(String propertyId) {
+    public void deleteProperty(UUID propertyId) {
         Property property = propertyRepository.findById(propertyId)
             .orElseThrow(() -> new NotFoundException("Property not found with ID: " + propertyId));
 
@@ -290,6 +353,20 @@ public class PropertyServiceImpl implements PropertyService {
         propertyRepository.save(property);
     }
 
+    /**
+     * Checks if the current user is an owner of a property with the given ID.
+     * 
+     * @return The owner ID if the current user has the role ACCOMMODATION_OWNER, null otherwise.
+     */
+    private UUID getOwnerID() {
+        String role = userContext.getRole();
+        UUID ownerID = null;
+        if (role.equals("ACCOMMODATION_OWNER")) {
+            ownerID = userContext.getUserID(); 
+        } 
+        return ownerID;
+    }
+
     private boolean haveNoFutureBookings(Property property) {
         LocalDateTime now = LocalDateTime.now();
         for (RoomType roomType : property.getListRoomType()) {
@@ -304,15 +381,14 @@ public class PropertyServiceImpl implements PropertyService {
         return true;
     }
 
-    private String getTypePrefix(int type) {
-        return switch (type) {
-            case 1 -> "HOT";
-            case 2 -> "VIL";
-            case 3 -> "APT";
-            default -> "HOT";
-        }; 
-    }
 
+    /**
+     * Maps a property to a simpler DTO so that it can be used for all properties
+     * and not be to big for the response
+     * 
+     * @param property The Property to be converted.
+     * @return a simple DTO for the property.
+     */ 
     private AllPropertyResponseDTO mapToAllPropertyDTO(Property property) {
         return AllPropertyResponseDTO.builder()
             .propertyID(property.getPropertyID())
@@ -322,7 +398,13 @@ public class PropertyServiceImpl implements PropertyService {
             .activeStatus(property.getActiveStatus())
             .build();
     }
-
+    
+    /**
+     * Maps a property to a detailed DTO 
+     * 
+     * @param property The Property to be converted.
+     * @return a detailed DTO for the property.
+     */ 
     private PropertyResponseDTO mapToPropertyDTO(Property property) {
         List<RoomTypeResponseDTO> roomTypeDTOs = roomTypeService.getRoomTypesByProperty(property);
 
