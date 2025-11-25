@@ -55,7 +55,7 @@ public class Bill {
     private int status;
 
     @Column(name = "amount")
-    private Integer amount;
+    private Long amount;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

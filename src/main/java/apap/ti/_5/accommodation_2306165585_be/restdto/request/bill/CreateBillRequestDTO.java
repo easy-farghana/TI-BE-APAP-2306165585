@@ -27,6 +27,6 @@ public class CreateBillRequestDTO {
     
     @NotNull(message = "Amount wajib diisi")
     @Min(value = 1, message = "amount minimal 1")
-    private Integer amount;
+    private Long amount;
    
 }

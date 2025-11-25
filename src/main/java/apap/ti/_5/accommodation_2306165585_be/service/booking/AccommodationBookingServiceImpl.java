@@ -32,7 +32,6 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
     private final AccommodationBookingRepository bookingRepository;
     private final RoomService roomService;
     private final RoomRepository roomRepository;
-    private final RoomTypeRepository roomTypeRepository;
     private final PropertyRepository propertyRepository;
 
     public AccommodationBookingServiceImpl(
@@ -45,7 +44,6 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         this.bookingRepository = accommodationBookingRepository;
         this.roomService = roomService;
         this.roomRepository = roomRepository;
-        this.roomTypeRepository = roomTypeRepository;
         this.propertyRepository = propertyRepository;
     }
 

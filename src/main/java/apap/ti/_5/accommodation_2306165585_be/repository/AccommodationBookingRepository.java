@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 
 import apap.ti._5.accommodation_2306165585_be.model.AccommodationBooking;
 import apap.ti._5.accommodation_2306165585_be.model.Room;

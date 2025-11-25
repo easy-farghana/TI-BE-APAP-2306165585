@@ -50,4 +50,6 @@ public interface BillRepository extends JpaRepository<Bill, UUID>{
             @Param("status") Integer status,
             @Param("serviceName") String serviceName
     );
+
+    Optional<Bill> findByServiceReferenceID(String serviceReferenceID);
 }

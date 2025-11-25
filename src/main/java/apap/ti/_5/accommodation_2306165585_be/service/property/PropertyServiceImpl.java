@@ -218,6 +218,11 @@ public class PropertyServiceImpl implements PropertyService {
         Property property = propertyRepository.findByIdActive(propertyId)
                 .orElseThrow(() -> new NotFoundException("Property not found with ID: " + propertyId));
 
+        String role = userContext.getRole();
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !property.getOwnerID().equals(userContext.getUserID())) {
+            throw new SecurityException("Not authorized to modify property with ID: " + propertyId);
+        }
+
         // Update property details
         property.setPropertyName(request.getProperty().getPropertyName());
         property.setAddress(request.getProperty().getAddress());

@@ -26,5 +26,8 @@ accommodation-be:
         jwtExpirationMs: 86400000  
 
 external:
-    profile-service-url: "http://localhost:8081"
+    flight-service-url: "http://localhost:8081"
+    insurance-service-url: "http://localhost:8083"
+    tour-service-url: "http://localhost:8084"
+    rental-service-url: "http://localhost:8085"
     auth-service-url: "http://localhost:8081"

@@ -1,5 +1,6 @@
 package apap.ti._5.accommodation_2306165585_be.service.bill;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,8 +15,12 @@ import apap.ti._5.accommodation_2306165585_be.model.Bill;
 import apap.ti._5.accommodation_2306165585_be.repository.BillRepository;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.CreateBillRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.bill.BillResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
 import apap.ti._5.accommodation_2306165585_be.security.UserContext;
 import apap.ti._5.accommodation_2306165585_be.service.external.ExternalApiService;
+import apap.ti._5.accommodation_2306165585_be.restdto.external.response.UserInfoResponseDTO;
+
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -36,16 +41,30 @@ public class BillServiceImpl implements BillService {
     );
 
     @Override
-    public BillResponseDTO createBooking(CreateBillRequestDTO billDTO) {
-        Bill bill = new Bill();
+    public BillResponseDTO createBill(CreateBillRequestDTO billDTO) {
         
-
         if (!VALID_SERVICES.contains(billDTO.getServiceName())) {
             throw new IllegalArgumentException(
                 "Invalid service name: " + billDTO.getServiceName() +
                 ". Must be one of: " + VALID_SERVICES
             );
         }
+        
+        if (!externalApiService.checkIfValidServiceReference(billDTO.getServiceName(), billDTO.getServiceReferenceID())) {
+            throw new NotFoundException(
+                "Service reference ID not found for service " + billDTO.getServiceName() + ": " + billDTO.getServiceReferenceID()
+            );
+        }
+        
+        Bill billOnReferenceID = billRepository.findByServiceReferenceID(billDTO.getServiceReferenceID()).orElse(null); 
+        
+        if (billOnReferenceID != null) {
+            throw new IllegalArgumentException(
+                "Bill with service reference ID " + billDTO.getServiceReferenceID() + " already exists"
+            );
+        }
+        
+        Bill bill = new Bill();
 
         bill.setCustomerID(billDTO.getCustomerID());
         bill.setServiceName(billDTO.getServiceName());
@@ -140,6 +159,68 @@ public class BillServiceImpl implements BillService {
                 .map(this::mapToBillResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public BillResponseDTO getBillDetails(UUID billID) {
+        Bill bill = billRepository.findById(billID).orElseThrow(
+            () -> new NotFoundException("Bill not found")
+        );
+
+        String role = userContext.getRole();
+        
+        if (role.equals(RoleGroup.SUPERADMIN)) {
+            return mapToBillResponseDTO(bill);
+        } else if (role.equals(RoleGroup.CUSTOMER) && bill.getCustomerID().equals(userContext.getUserID())) {
+            return mapToBillResponseDTO(bill);
+        } else if (isRoleAllowedForService(role, bill.getServiceName())) {
+            return mapToBillResponseDTO(bill);
+        } else {
+            throw new SecurityException("You are not authorized to access this bill");
+        }
+    }
+
+    @Override
+    public BillResponseDTO payBill(UUID billID, String couponCode) {
+        Bill bill = billRepository.findById(billID).orElseThrow(
+            () -> new NotFoundException("Bill not found")
+        );
+
+        if (bill.getStatus() == 1) {
+            throw new IllegalArgumentException("Bill is already paid");
+        } 
+
+        UUID userID = userContext.getUserID();
+        if (!userID.equals(bill.getCustomerID())) {
+            throw new SecurityException("You are not authorized to pay this bill");
+        }
+
+        UserInfoResponseDTO userInfo = externalApiService.getUserDetail(userID);
+
+        // Adjust bill amount if coupon is provided
+        double paymentAmount = bill.getAmount();
+
+        // TODO: call loyalty service
+        
+        // if (couponCode != null && !couponCode.isEmpty()) {
+        //     double discount = loyaltyService.calculateDiscount(couponCode, bill);
+        //     finalAmount -= discount;
+        // }
+
+        if (userInfo.getSaldo() < paymentAmount) {
+            throw new IllegalArgumentException("Insufficient balance");
+        }
+
+        // Deduct balance (optional, depending on your system)
+
+        // externalApiService.deductBalance(userID, paymentAmount);
+
+        // Update bill
+        bill.setStatus(1);
+        bill.setPaymentTimestamp(LocalDateTime.now());
+        billRepository.save(bill);
+        return mapToBillResponseDTO(bill);
+    }
+
 
     /**
      * Check if the given role is allowed to access bills for the given service.

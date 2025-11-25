@@ -26,7 +26,7 @@ public class BillResponseDTO {
 
     private Integer status;
 
-    private Integer amount;
+    private Long amount;
 
     private LocalDateTime createdAt;
 

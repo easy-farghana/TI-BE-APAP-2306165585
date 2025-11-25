@@ -16,6 +16,8 @@ import apap.ti._5.accommodation_2306165585_be.repository.RoomTypeRepository;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype.AddRoomTypeRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.roomtype.RoomTypeResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
+import apap.ti._5.accommodation_2306165585_be.security.UserContext;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 
 
@@ -24,6 +26,9 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     @Autowired
     RoomTypeRepository roomTypeRepository;
 
+    @Autowired
+    UserContext userContext;
+    
     @Autowired
     RoomService roomService;
 
@@ -41,11 +46,20 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         RoomType roomType = roomTypeRepository.findById(roomTypeId).orElseThrow(
             () -> new NotFoundException("Room type with id " + roomTypeId + " not found.")
         );
+        String role = userContext.getRole();
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !roomType.getProperty().getOwnerID().equals(userContext.getUserID())) {
+            throw new SecurityException("You are not authorized to access this property");
+        }
         return mapToRoomTypeDTO(roomType);
     }
 
     @Override
     public List<RoomTypeResponseDTO> getRoomTypesByProperty(Property property) {
+        String role = userContext.getRole();
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !property.getOwnerID().equals(userContext.getUserID())) {
+            throw new SecurityException("You are not authorized to access this property");
+        }
+
         return property.getListRoomType().stream()
             .map(this::mapToRoomTypeDTO)
             .collect(Collectors.toList());
@@ -53,6 +67,11 @@ public class RoomTypeServiceImpl implements RoomTypeService {
 
     @Override
     public List<RoomTypeResponseDTO> getRoomTypesByProperty(Property property, LocalDateTime checkIn, LocalDateTime checkOut) {
+        String role = userContext.getRole();
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !property.getOwnerID().equals(userContext.getUserID())) {
+            throw new SecurityException("You are not authorized to access this property");
+        }
+
         return property.getListRoomType().stream()
             .map(roomType -> mapToRoomTypeDTO(roomType, checkIn, checkOut))
             .collect(Collectors.toList());
@@ -60,6 +79,11 @@ public class RoomTypeServiceImpl implements RoomTypeService {
 
     @Override
     public RoomType createRoomType(AddRoomTypeRequestDTO request, Property property) {
+        String role = userContext.getRole();
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !property.getOwnerID().equals(userContext.getUserID())) {
+            throw new SecurityException("You are not authorized to access this property");
+        }
+        
         RoomType roomType = RoomType.builder()
             .name(request.getName())
             .price(request.getPrice())

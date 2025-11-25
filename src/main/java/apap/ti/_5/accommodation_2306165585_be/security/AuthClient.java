@@ -10,14 +10,18 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
+
 import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class AuthClient {
 
     @Autowired
@@ -38,14 +42,22 @@ public class AuthClient {
         Map<String, String> body = Map.of("token", token);
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
 
-        ResponseEntity<BaseResponseDTO<VerifyTokenResponseDTO>> response =
-            restTemplate.exchange(
-                authServiceUrl + "/api/auth/verify",
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<>() {}
-            );
-
-        return response.getBody().getData();
+        try {
+            ResponseEntity<BaseResponseDTO<VerifyTokenResponseDTO>> response =
+                restTemplate.exchange(
+                    authServiceUrl + "/api/auth/verify",
+                    HttpMethod.POST,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+                );
+        
+            return response.getBody().getData();
+        } catch (HttpClientErrorException.Unauthorized e) {
+            log.warn("Token not valid or expired: " + e.getMessage());
+            throw new SecurityException("Token not valid or expired: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Error verifying token: " + e.getMessage(), e);
+            throw new SecurityException("Token not valid or expired: " + e.getMessage());
+        }
     }
 }

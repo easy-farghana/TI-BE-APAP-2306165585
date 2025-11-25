@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.BillCouponDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.CreateBillRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.bill.BillResponseDTO;
@@ -37,8 +38,10 @@ public class BillController {
     public static final String BASE_URL = "/bill";
     public static final String VIEW_CUSTOMER_BILL = BASE_URL + "/customer";
     public static final String VIEW_SERVICE_BILL = BASE_URL + "/{serviceName}";
-    public static final String VIEW_BILL_DETAILS = BASE_URL + "/{billId}";
+    public static final String VIEW_BILL_DETAILS = BASE_URL + "/detail/{billId}";
     public static final String CREATE_BILL = BASE_URL + "/create";
+    public static final String PAY_BILL = BASE_URL + "/{billId}/pay";
+
 
     /**
      * Get all bills with optional filters on customer ID, service name, and status
@@ -118,8 +121,31 @@ public class BillController {
         );
     }
 
+    @GetMapping(VIEW_BILL_DETAILS)
+    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> getBillDetails(@PathVariable UUID billId) {
+        BillResponseDTO bill = billService.getBillDetails(billId);
+        return responseUtil.success(
+            bill,
+            "Fetched bill details successfully",
+            HttpStatus.OK
+        );
+    }
 
-    
+    @PostMapping(PAY_BILL)
+    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> payBill(
+        @PathVariable UUID billId,
+        @RequestBody(required = false) BillCouponDTO request
+    ) {
+
+        String couponCode = request != null ? request.getCouponCode() : null;
+        BillResponseDTO bill= billService.payBill(billId, couponCode);
+ 
+        return responseUtil.success(
+            bill,
+            "Bill payed successfully",
+            HttpStatus.OK
+        );
+    }
 
 
     /**
@@ -130,7 +156,7 @@ public class BillController {
      */
     @PostMapping(CREATE_BILL)
     public ResponseEntity<BaseResponseDTO<BillResponseDTO>> createBill(@RequestBody CreateBillRequestDTO bill) {
-        BillResponseDTO newBill = billService.createBooking(bill);
+        BillResponseDTO newBill = billService.createBill(bill);
         return responseUtil.success(
             newBill,
             "Bill created successfully",
