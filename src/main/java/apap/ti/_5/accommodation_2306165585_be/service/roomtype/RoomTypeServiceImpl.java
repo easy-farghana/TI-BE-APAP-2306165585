@@ -14,10 +14,12 @@ import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.model.RoomType;
 import apap.ti._5.accommodation_2306165585_be.repository.RoomTypeRepository;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype.AddRoomTypeRequestDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype.AddSingularRoomTypeDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.roomtype.RoomTypeResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
 import apap.ti._5.accommodation_2306165585_be.security.UserContext;
+import apap.ti._5.accommodation_2306165585_be.service.property.PropertyService;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 
 
@@ -25,6 +27,9 @@ import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 public class RoomTypeServiceImpl implements RoomTypeService {
     @Autowired
     RoomTypeRepository roomTypeRepository;
+
+    @Autowired
+    PropertyService propertyService;
 
     @Autowired
     UserContext userContext;
@@ -48,7 +53,7 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         );
         String role = userContext.getRole();
         if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !roomType.getProperty().getOwnerID().equals(userContext.getUserID())) {
-            throw new SecurityException("You are not authorized to access this property");
+            throw new SecurityException("You are not authorized to access this room type");
         }
         return mapToRoomTypeDTO(roomType);
     }
@@ -96,6 +101,30 @@ public class RoomTypeServiceImpl implements RoomTypeService {
             .build();
 
         return roomTypeRepository.save(roomType);
+    }
+
+    @Override
+    public RoomTypeResponseDTO createRoomType(AddSingularRoomTypeDTO request) {
+        Property property = propertyService.getRawPropertyById(request.getPropertyID());
+        
+        String role = userContext.getRole();
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !property.getOwnerID().equals(userContext.getUserID())) {
+            throw new SecurityException("You are not authorized to access this property");
+        }
+        
+        RoomType roomType = RoomType.builder()
+            .name(request.getName())
+            .price(request.getPrice())
+            .description(request.getDescription())
+            .capacity(request.getCapacity())
+            .facility(request.getFacility())
+            .floor(request.getFloor())
+            .listRoom(new ArrayList<>())
+            .property(property)
+            .build();
+        roomTypeRepository.save(roomType);
+        
+        return mapToRoomTypeDTO(roomType);
     }
 
     @Override

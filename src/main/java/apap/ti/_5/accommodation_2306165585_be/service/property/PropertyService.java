@@ -27,4 +27,5 @@ public interface PropertyService {
     List<AllPropertyResponseDTO> getAllActiveProperties();
     IncomeStatisticsDTO getIncomeStatistics(int month, int year);
     List<AllPropertyResponseDTO> getAllActiveProperties(Map<String, Object> params);
+    Property getRawPropertyById(UUID propertyId);
 }

@@ -15,14 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.repository.PropertyRepository;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.roomtype.RoomTypeResponseDTO;
-import org.springframework.web.bind.annotation.RequestParam;
-
+import apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype.AddSingularRoomTypeDTO;
 
 
 
@@ -73,16 +73,27 @@ public class RoomGlobalController {
         );  
     }
 
-    // @GetMapping(VIEW_TYPE)
-    // public ResponseEntity<BaseResponseDTO<List<RoomTypeResponseDTO>>> getRoomType(@PathVariable UUID roomTypeId) {
+    @GetMapping(VIEW_TYPE)
+    public ResponseEntity<BaseResponseDTO<RoomTypeResponseDTO>> getRoomType(@PathVariable UUID roomTypeId) {
 
-    //     List<RoomTypeResponseDTO> listRoomType = roomTypeService.getRoomType(roomTypeId);
-    //     return responseUtil.success(
-    //         listRoomType,
-    //         "Room type details id " + roomTypeId + " fetched successfully",
-    //         HttpStatus.OK
-    //     );  
-    // }
+        RoomTypeResponseDTO roomType = roomTypeService.getRoomTypeById(roomTypeId);
+        return responseUtil.success(
+            roomType,
+            "Room type details id " + roomTypeId + " fetched successfully",
+            HttpStatus.OK
+        );  
+    }
+
+
+    @GetMapping(CREATE_TYPE)
+    public ResponseEntity<BaseResponseDTO<RoomTypeResponseDTO>> createRoomType(@RequestBody AddSingularRoomTypeDTO request) {
+        RoomTypeResponseDTO roomType = roomTypeService.createRoomType(request);
+        return responseUtil.success(
+            roomType,
+            "Room type created succesfully",
+            HttpStatus.OK
+        );  
+    }
     
     @GetMapping(BASE_URL_ROOM)
     public ResponseEntity<BaseResponseDTO<List<RoomResponseDTO>>> getAllRoom() {

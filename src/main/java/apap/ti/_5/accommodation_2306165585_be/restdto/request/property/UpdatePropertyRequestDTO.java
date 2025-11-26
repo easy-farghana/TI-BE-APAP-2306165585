@@ -16,6 +16,19 @@ public class UpdatePropertyRequestDTO {
 
     @NotBlank(message = "Nama properti wajib diisi")
     private String propertyName;
+    
+    /**
+     * Tipe Properti
+     * 1 = Hotel, 2 = Villa, 3 = Apartment
+     */
+    @NotNull(message = "Tipe properti wajib diisi")
+    @Min(value = 1, message = "Tipe properti tidak valid")
+    @Max(value = 3, message = "Tipe properti tidak valid")
+    private Integer type;
+
+    @NotNull(message = "Provinsi wajib diisi")
+    @Min(value = 1, message = "Provinsi tidak valid")
+    private Integer province;
 
     @NotBlank(message = "Alamat wajib diisi")
     private String address;

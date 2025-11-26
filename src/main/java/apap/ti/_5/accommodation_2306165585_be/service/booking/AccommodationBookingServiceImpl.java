@@ -21,6 +21,8 @@ import apap.ti._5.accommodation_2306165585_be.repository.RoomTypeRepository;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.booking.AddBookingRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AllBookingResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
+import apap.ti._5.accommodation_2306165585_be.security.UserContext;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -33,24 +35,36 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
     private final RoomService roomService;
     private final RoomRepository roomRepository;
     private final PropertyRepository propertyRepository;
+    private final UserContext userContext ;
 
     public AccommodationBookingServiceImpl(
         AccommodationBookingRepository accommodationBookingRepository,
         RoomService roomService,
         RoomRepository roomRepository,
         RoomTypeRepository roomTypeRepository,
-        PropertyRepository propertyRepository) {
+        PropertyRepository propertyRepository,
+        UserContext userContext
+    ) {
 
         this.bookingRepository = accommodationBookingRepository;
         this.roomService = roomService;
         this.roomRepository = roomRepository;
         this.propertyRepository = propertyRepository;
+        this.userContext = userContext;
     }
 
-   @Override
+
+    @Override
     public List<AllBookingResponseDTO> getAllAccommodationBookings() {
-        List<AccommodationBooking> bookings = bookingRepository.findAll();
-        
+        String role = userContext.getRole();
+        List<AccommodationBooking> bookings;
+        switch (role) {
+            case RoleGroup.SUPERADMIN -> bookings = bookingRepository.findAll();
+            case RoleGroup.ACCOMMODATION_OWNER -> bookings = bookingRepository.findAllByOwnerID(userContext.getUserID());
+            case RoleGroup.CUSTOMER -> bookings = bookingRepository.findAllByCustomerID(userContext.getUserID());
+            default -> throw new SecurityException("You are not authorized to access this endpoint");
+        }
+
         return bookings.stream()
                 .map(this::mapToAllBookingDTO)
                 .toList();
@@ -61,7 +75,27 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         AccommodationBooking booking = bookingRepository.findById(id).orElseThrow(
             () -> new NotFoundException("Booking not found with ID: " + id)
         );
-        return mapToAccommodationBookingDTO(booking);
+
+        String role = userContext.getRole();
+
+        if (role.equals(RoleGroup.SUPERADMIN)) {
+            return mapToAccommodationBookingDTO(booking);
+        } 
+
+        Room room = booking.getRoom();
+        RoomType roomType = room.getRoomType();
+        Property property = roomType.getProperty();
+        UUID userID = userContext.getUserID();
+
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && property.getOwnerID().equals(userID)) {
+            return mapToAccommodationBookingDTO(booking);
+        }
+
+        if (role.equals(RoleGroup.CUSTOMER) && booking.getCustomerID().equals(userID)) {
+            return mapToAccommodationBookingDTO(booking);
+        }
+
+        throw new SecurityException("You are not authorized to access this booking");
     }
 
     @Override

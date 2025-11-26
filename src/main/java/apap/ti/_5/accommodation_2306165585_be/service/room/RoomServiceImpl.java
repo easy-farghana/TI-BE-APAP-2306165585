@@ -16,11 +16,16 @@ import apap.ti._5.accommodation_2306165585_be.model.RoomType;
 import apap.ti._5.accommodation_2306165585_be.repository.RoomRepository;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.room.AddMaintenanceRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
+import apap.ti._5.accommodation_2306165585_be.security.UserContext;
 
 @Service
 public class RoomServiceImpl implements RoomService {
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired
+    private UserContext userContext;
     
     /**
      * Gets all rooms in the system using the default search period.
@@ -92,6 +97,16 @@ public class RoomServiceImpl implements RoomService {
             () -> new NotFoundException("Room not found with ID: " + request.getRoomID())
         );
         
+        String role = userContext.getRole();
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER)) {
+            RoomType roomType = room.getRoomType();
+            Property property = roomType.getProperty();
+            boolean isOwner = property.getOwnerID().equals(userContext.getUserID());
+            if (!isOwner) {
+                throw new SecurityException("You are not authorized to access this property");
+            }
+        }
+
         if (request.getMaintenanceStart().isAfter(request.getMaintenanceEnd())) {
             throw new IllegalArgumentException("maintenanceStart must be before maintenanceEnd");
         }

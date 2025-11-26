@@ -34,6 +34,7 @@ import apap.ti._5.accommodation_2306165585_be.security.UserContext;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import apap.ti._5.accommodation_2306165585_be.service.roomtype.RoomTypeService;
 import jakarta.transaction.Transactional;
+
 @Service
 public class PropertyServiceImpl implements PropertyService {
     @Autowired
@@ -111,6 +112,22 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         return mapToPropertyDTO(property);
+    }
+
+    @Override
+    public Property getRawPropertyById(UUID propertyId) {
+        Property property = propertyRepository.findById(propertyId).orElseThrow(
+            () -> new NotFoundException("Property not found with ID: " + propertyId)
+        );
+        
+        // Accommodation owner only can only see their own properties
+        UUID ownerID = getOwnerID();
+        String role = userContext.getRole();
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !property.getOwnerID().equals(ownerID)) {
+            throw new NotFoundException("Property not found with ID: " + propertyId);
+        }
+
+        return property;
     }
 
 
@@ -224,6 +241,8 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         // Update property details
+        property.setType(request.getProperty().getType());
+        property.setProvince(request.getProperty().getProvince());
         property.setPropertyName(request.getProperty().getPropertyName());
         property.setAddress(request.getProperty().getAddress());
         property.setDescription(request.getProperty().getDescription());
@@ -366,7 +385,7 @@ public class PropertyServiceImpl implements PropertyService {
     private UUID getOwnerID() {
         String role = userContext.getRole();
         UUID ownerID = null;
-        if (role.equals("ACCOMMODATION_OWNER")) {
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER)) {
             ownerID = userContext.getUserID(); 
         } 
         return ownerID;

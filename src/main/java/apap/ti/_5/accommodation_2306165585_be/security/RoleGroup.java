@@ -37,7 +37,7 @@ public class RoleGroup {
         TOUR_PACKAGE_VENDOR
     };
     
-    public static final String[] PROPERTY_ROLES = {
+    public static final String[] ACCOMMODATION_ROLES = {
         SUPERADMIN,
         ACCOMMODATION_OWNER,
         CUSTOMER,

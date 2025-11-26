@@ -191,8 +191,8 @@ public class BillServiceImpl implements BillService {
         UserInfoResponseDTO userInfo = externalApiService.getUserDetail(userID);
 
         // Adjust bill amount if coupon is provided
-        double paymentAmount = bill.getAmount();
-
+        long paymentAmount = bill.getAmount();
+        long userSaldo = userInfo.getSaldo();
         // TODO: call loyalty service
         
         // if (couponCode != null && !couponCode.isEmpty()) {
@@ -200,17 +200,18 @@ public class BillServiceImpl implements BillService {
         //     finalAmount -= discount;
         // }
 
-        if (userInfo.getSaldo() < paymentAmount) {
+        if (userSaldo < paymentAmount) {
             throw new IllegalArgumentException("Insufficient balance. Please top up balance.");
         }
-
+        
         // Deduct balance via profile service
-        // externalApiService.deductBalance(userID, paymentAmount);
+        externalApiService.deductBalance(userID, userSaldo, paymentAmount);
 
         // Update bill
         bill.setStatus(1);
         bill.setPaymentTimestamp(LocalDateTime.now());
         billRepository.save(bill);
+        
         return mapToBillResponseDTO(bill);
     }
 
