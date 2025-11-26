@@ -1,0 +1,18 @@
+# Compose for local database, adjust if necessary
+
+services:
+  accommodation-db:
+    image: postgres:17.5-alpine
+    ports:
+      - "35002:5432"
+    restart: no
+    environment:
+      - POSTGRES_USER=accommodation-dev
+      - POSTGRES_PASSWORD=CLI-825.2025X
+      - POSTGRES_DB=accommodation-dev
+    volumes:
+      - accommodation-db:/var/lib/postgresql/data
+
+volumes:
+  accommodation-db:
+    driver: local

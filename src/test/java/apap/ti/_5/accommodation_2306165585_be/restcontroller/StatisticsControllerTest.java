@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,12 +40,19 @@ public class StatisticsControllerTest {
     private AllPropertyResponseDTO property3;
     private AllBookingResponseDTO booking1;
     private AllBookingResponseDTO booking2;
+    private UUID id1;
+    private UUID id2;
+    private UUID id3;
 
     @BeforeEach
     void setUp() {
+
+        id1 = UUID.randomUUID();
+        id2 = UUID.randomUUID();
+        id3 = UUID.randomUUID();
         // Setup test data for properties
         property1 = AllPropertyResponseDTO.builder()
-                .propertyID("property-1")
+                .propertyID(id1)
                 .propertyName("Hotel Paradise")
                 .type(1)
                 .totalRooms(50)
@@ -52,7 +60,7 @@ public class StatisticsControllerTest {
                 .build();
 
         property2 = AllPropertyResponseDTO.builder()
-                .propertyID("property-2")
+                .propertyID(id2)
                 .propertyName("Beach Resort")
                 .type(2)
                 .totalRooms(30)
@@ -60,7 +68,7 @@ public class StatisticsControllerTest {
                 .build();
 
         property3 = AllPropertyResponseDTO.builder()
-                .propertyID("property-3")
+                .propertyID(id3)
                 .propertyName("Mountain Lodge")
                 .type(1)
                 .totalRooms(20)

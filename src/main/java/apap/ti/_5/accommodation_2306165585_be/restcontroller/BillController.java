@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import apap.ti._5.accommodation_2306165585_be.service.bill.BillService;
 import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import apap.ti._5.accommodation_2306165585_be.restdto.response.bill.BillResponse
 
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class BillController {
     @Autowired
     ResponseUtil responseUtil;
@@ -116,7 +118,7 @@ public class BillController {
 
         return responseUtil.success(
             allBill,
-            "Fetched all customer's bills successfully",
+            "Fetched " + serviceName +  "bills successfully",
             HttpStatus.OK
         );
     }
@@ -138,13 +140,25 @@ public class BillController {
     ) {
 
         String couponCode = request != null ? request.getCouponCode() : null;
-        BillResponseDTO bill= billService.payBill(billId, couponCode);
- 
-        return responseUtil.success(
-            bill,
-            "Bill payed successfully",
-            HttpStatus.OK
-        );
+        try {
+            BillResponseDTO bill= billService.payBill(billId, couponCode);
+            return responseUtil.success(
+                bill,
+                "Bill payed successfully",
+                HttpStatus.OK
+            );
+        } catch (SecurityException e) {
+            throw e;
+        } catch (IllegalArgumentException e){
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error: " + e.getMessage());
+            return responseUtil.error(
+                "Payment failed. An unexpexted error occured. Please try again later.",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+
     }
 
 

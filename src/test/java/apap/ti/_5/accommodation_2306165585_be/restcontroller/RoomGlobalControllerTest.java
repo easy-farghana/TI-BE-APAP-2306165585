@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,29 +41,41 @@ public class RoomGlobalControllerTest {
     private RoomResponseDTO room1;
     private RoomResponseDTO room2;
 
+    private UUID id1;
+    private UUID id2;
+    private UUID id3;
+    private UUID id4;
+
     @BeforeEach
     void setUp() {
+
+        id1 = UUID.randomUUID();
+        id2 = UUID.randomUUID();
+        id3 = UUID.randomUUID();
+        id4 = UUID.randomUUID();
+
+
         roomType1 = RoomTypeResponseDTO.builder()
-                .roomTypeID("type-1")
+                .roomTypeID(id1)
                 .name("Deluxe")
                 .capacity(2)
                 .price(500000)
                 .build();
 
         roomType2 = RoomTypeResponseDTO.builder()
-                .roomTypeID("type-2")
+                .roomTypeID(id2)
                 .name("Suite")
                 .capacity(4)
                 .price(800000)
                 .build();
 
         room1 = RoomResponseDTO.builder()
-                .roomID("room-1")
+                .roomID(id3)
                 .name("101")
                 .build();
 
         room2 = RoomResponseDTO.builder()
-                .roomID("room-2")
+                .roomID(id4)
                 .name("102")
                 .availabilityStatus(0)
                 .build();

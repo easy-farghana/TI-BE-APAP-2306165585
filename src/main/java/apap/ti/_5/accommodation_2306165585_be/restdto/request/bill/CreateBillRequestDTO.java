@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class CreateBillRequestDTO {
-    @NotNull(message = "Nama tipe kamar wajib diisi")
+    @NotNull(message = "Customer ID wajib diisi")
     private UUID customerID;
 
     @NotBlank(message = "Nama servis wajib diisi")

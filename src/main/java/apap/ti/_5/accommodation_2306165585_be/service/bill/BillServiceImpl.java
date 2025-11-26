@@ -49,13 +49,7 @@ public class BillServiceImpl implements BillService {
                 ". Must be one of: " + VALID_SERVICES
             );
         }
-        
-        if (!externalApiService.checkIfValidServiceReference(billDTO.getServiceName(), billDTO.getServiceReferenceID())) {
-            throw new NotFoundException(
-                "Service reference ID not found for service " + billDTO.getServiceName() + ": " + billDTO.getServiceReferenceID()
-            );
-        }
-        
+
         Bill billOnReferenceID = billRepository.findByServiceReferenceID(billDTO.getServiceReferenceID()).orElse(null); 
         
         if (billOnReferenceID != null) {
@@ -202,16 +196,15 @@ public class BillServiceImpl implements BillService {
         // TODO: call loyalty service
         
         // if (couponCode != null && !couponCode.isEmpty()) {
-        //     double discount = loyaltyService.calculateDiscount(couponCode, bill);
+        //     double discount = externalApiService.calculateDiscount(couponCode, bill);
         //     finalAmount -= discount;
         // }
 
         if (userInfo.getSaldo() < paymentAmount) {
-            throw new IllegalArgumentException("Insufficient balance");
+            throw new IllegalArgumentException("Insufficient balance. Please top up balance.");
         }
 
-        // Deduct balance (optional, depending on your system)
-
+        // Deduct balance via profile service
         // externalApiService.deductBalance(userID, paymentAmount);
 
         // Update bill
