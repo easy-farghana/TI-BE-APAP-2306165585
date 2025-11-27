@@ -24,6 +24,7 @@ accommodation-be:
     app:
         jwtSecret: "${JWT_SECRET_KEY}"
         jwtExpirationMs: 86400000  
+        apiKey: "${API_KEY}"
 
 credentials:
     admin-email: "${ADMIN_EMAIL}"

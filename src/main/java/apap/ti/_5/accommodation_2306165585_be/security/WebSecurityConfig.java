@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import apap.ti._5.accommodation_2306165585_be.restcontroller.*;
+import apap.ti._5.accommodation_2306165585_be.security.api.ApiKeyFilter;
 import apap.ti._5.accommodation_2306165585_be.security.jwt.JwtTokenFilter;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -26,6 +27,9 @@ public class WebSecurityConfig {
     @Autowired
     private JwtTokenFilter jwtTokenFilter;
 
+    @Autowired
+    private ApiKeyFilter apiKeyFilter;
+
     // ===================== JWT API SECURITY =====================
     @Bean
     @Order(1)
@@ -33,6 +37,7 @@ public class WebSecurityConfig {
         http.securityMatcher("/api/**")
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
+            .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(requests -> requests
                 // Property endpoints
                 .requestMatchers(HttpMethod.GET, "/api" + PropertyController.BASE_URL)
