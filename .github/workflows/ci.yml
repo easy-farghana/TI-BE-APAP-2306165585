@@ -88,15 +88,24 @@ jobs:
 
       - name: Generate ConfigMap
         run: |
-          printf "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: accommodation-be-config\n  namespace: default\ndata:\n  DATABASE_URL_PROD: \"%s\"\n  DATABASE_USERNAME: \"%s\"\n" \
+          printf "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: accommodation-be-config\n  namespace: default\ndata:\n  DATABASE_URL_PROD: \"%s\"\n  DATABASE_USERNAME: \"%s\"\n  FLIGHT_URL: \"%s\"\n  INSURANCE_URL: \"%s\"\n  TOUR_URL: \"%s\"\n  RENTAL_URL: \"%s\"\n  AUTH_URL: \"%s\"\n  ACCOMMODATION_URL: \"%s\"\n" \
           "${{ secrets.DATABASE_URL_PROD }}" \
-          "${{ secrets.DATABASE_USERNAME }}" > configmap.yaml
-
+          "${{ secrets.DATABASE_USERNAME }}" \
+          "${{ secrets.FLIGHT_URL }}" \
+          "${{ secrets.INSURANCE_URL }}" \
+          "${{ secrets.TOUR_URL }}" \
+          "${{ secrets.RENTAL_URL }}" \
+          "${{ secrets.AUTH_URL }}" \
+          "${{ secrets.ACCOMMODATION_URL }}" > configmap.yaml
+          
       - name: Generate Secret
         run: |
-          printf "apiVersion: v1\nkind: Secret\nmetadata:\n  name: accommodation-be-secret\n  namespace: default\ntype: Opaque\nstringData:\n  DATABASE_PASSWORD: \"%s\"\n  CORS_ALLOWED_ORIGINS: \"%s\"\n" \
+          printf "apiVersion: v1\nkind: Secret\nmetadata:\n  name: accommodation-be-secret\n  namespace: default\ntype: Opaque\nstringData:\n  DATABASE_PASSWORD: \"%s\"\n  CORS_ALLOWED_ORIGINS: \"%s\"\n  API_KEY: \"%s\"\n  ADMIN_EMAIL: \"%s\"\n  ADMIN_PASSWORD: \"%s\"\n" \
           "${{ secrets.DATABASE_PASSWORD }}" \
-          "${{ secrets.CORS_ALLOWED_ORIGINS }}" > secret.yaml
+          "${{ secrets.CORS_ALLOWED_ORIGINS }}" \
+          "${{ secrets.API_KEY }}" \
+          "${{ secrets.ADMIN_EMAIL }}" \
+          "${{ secrets.ADMIN_PASSWORD }}" > secret.yaml
 
       - name: Replace image tag in deployment
         run: sed "s|REPLACE_ME_TAG|$IMAGE_TAG|g" k8s/deployment.yaml > deployment.yaml

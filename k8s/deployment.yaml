@@ -39,4 +39,48 @@ spec:
                 secretKeyRef:
                   name: accommodation-be-secret
                   key: CORS_ALLOWED_ORIGINS
-            
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: accommodation-be-secret
+                  key: API_KEY
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: accommodation-be-secret
+                  key: ADMIN_EMAIL
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: accommodation-be-secret
+                  key: ADMIN_PASSWORD
+            - name: FLIGHT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: accommodation-be-config
+                  key: FLIGHT_URL
+            - name: INSURANCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: accommodation-be-config
+                  key: INSURANCE_URL
+            - name: TOUR_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: accommodation-be-config
+                  key: TOUR_URL
+            - name: RENTAL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: accommodation-be-config
+                  key: RENTAL_URL
+            - name: AUTH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: accommodation-be-config
+                  key: AUTH_URL
+            - name: ACCOMMODATION_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: accommodation-be-config
+                  key: ACCOMMODATION_URL

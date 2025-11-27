@@ -31,8 +31,10 @@ credentials:
     admin-password: "${ADMIN_PASSWORD}"
 
 external:
-    flight-service-url: "http://localhost:8081"
-    insurance-service-url: "http://localhost:8083"
-    tour-service-url: "http://localhost:8084"
-    rental-service-url: "http://localhost:8085"
-    auth-service-url: "http://localhost:8081"
+    flight-service-url: "${FLIGHT_URL}"
+    insurance-service-url: "${INSURANCE_URL}"
+    tour-service-url: "${TOUR_URL}"
+    rental-service-url: "${RENTAL_URL}"
+    auth-service-url: "${AUTH_URL}"
+    accommodation-service-url: "${ACCOMMODATION_URL}"
+
