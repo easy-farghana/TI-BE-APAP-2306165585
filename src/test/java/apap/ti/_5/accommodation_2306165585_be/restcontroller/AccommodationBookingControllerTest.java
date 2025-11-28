@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import apap.ti._5.accommodation_2306165585_be.restdto.request.booking.AddBookingRequestDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.booking.BookingRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AllBookingResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.statistics.IncomeStatisticsDTO;
@@ -47,7 +47,7 @@ public class AccommodationBookingControllerTest {
 
     private AccommodationBookingResponseDTO bookingResponse;
     private AllBookingResponseDTO allBookingResponse;
-    private AddBookingRequestDTO bookingRequest;
+    private BookingRequestDTO bookingRequest;
 
     @BeforeEach
     void setUp() {
@@ -63,7 +63,7 @@ public class AccommodationBookingControllerTest {
         // allBookingResponse.setBookingId("B002");
         allBookingResponse.setPropertyName("Hotel Mewah Jakarta");
 
-        bookingRequest = new AddBookingRequestDTO();
+        bookingRequest = new BookingRequestDTO();
         bookingRequest.setCustomerName("William Cruise");
     }
 
@@ -97,7 +97,7 @@ public class AccommodationBookingControllerTest {
 
     @Test
     void testCreateBooking_Success() throws Exception {
-        when(accommodationBookingService.createBooking(any(AddBookingRequestDTO.class))).thenReturn(bookingResponse);
+        when(accommodationBookingService.createBooking(any(BookingRequestDTO.class))).thenReturn(bookingResponse);
 
         mockMvc.perform(post("/api/booking/create")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -106,13 +106,13 @@ public class AccommodationBookingControllerTest {
                 .andExpect(jsonPath("$.message").value("Accommodation booking created successfully"))
                 .andExpect(jsonPath("$.data.bookingID").value("B001"));
 
-        verify(accommodationBookingService, times(1)).createBooking(any(AddBookingRequestDTO.class));
+        verify(accommodationBookingService, times(1)).createBooking(any(BookingRequestDTO.class));
     }
 
     @Test
     void testUpdateBooking_Success() throws Exception {
         UUID bookingID = UUID.randomUUID();
-        when(accommodationBookingService.updateBooking(eq(bookingID), any(AddBookingRequestDTO.class))).thenReturn(bookingResponse);
+        when(accommodationBookingService.updateBooking(eq(bookingID), any(BookingRequestDTO.class))).thenReturn(bookingResponse);
 
         mockMvc.perform(put("/api/booking/update/{bookingID}", bookingID)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -121,13 +121,13 @@ public class AccommodationBookingControllerTest {
                 .andExpect(jsonPath("$.message").value("Accommodation booking updated successfully"))
                 .andExpect(jsonPath("$.data.bookingID").value("B001"));
 
-        verify(accommodationBookingService, times(1)).updateBooking(eq(bookingID), any(AddBookingRequestDTO.class));
+        verify(accommodationBookingService, times(1)).updateBooking(eq(bookingID), any(BookingRequestDTO.class));
     }
 
     @Test
     void testPayBooking_Success() throws Exception {
         UUID bookingID = UUID.randomUUID();
-        when(accommodationBookingService.payBooking(bookingID)).thenReturn(bookingResponse);
+        when(accommodationBookingService.updateBookingStatus(bookingID)).thenReturn(bookingResponse);
 
         mockMvc.perform(post("/api/booking/pay/{bookingID}", bookingID)
                 .contentType(MediaType.APPLICATION_JSON))

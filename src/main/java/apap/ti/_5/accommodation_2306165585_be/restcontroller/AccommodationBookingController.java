@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import apap.ti._5.accommodation_2306165585_be.restdto.request.booking.AddBookingRequestDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.booking.BookingRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AllBookingResponseDTO;
@@ -37,7 +37,7 @@ public class AccommodationBookingController {
     public static final String BASE_URL = "/booking";
     public static final String VIEW_BOOKING = BASE_URL + "/{bookingID}";
     public static final String CREATE_BOOKING = BASE_URL + "/create";
-    public static final String PAY_BOOKING = BASE_URL + "/pay/{bookingID}";
+    public static final String UPDATE_BOOKING_STATUS = BASE_URL + "/update/status{bookingID}";
     public static final String REFUND_BOOKING = BASE_URL + "/refund/{bookingID}"; 
     public static final String CANCEL_BOOKING = BASE_URL + "/cancel/{bookingID}";
     public static final String UPDATE_BOOKING = BASE_URL + "/update/{bookingID}";
@@ -75,7 +75,7 @@ public class AccommodationBookingController {
     }
 
     @PostMapping(CREATE_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> createAccommodationBooking(@RequestBody AddBookingRequestDTO accommodationBooking) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> createAccommodationBooking(@RequestBody BookingRequestDTO accommodationBooking) {
         AccommodationBookingResponseDTO newAccommodationBooking = accommodationBookingService.createBooking(accommodationBooking);
         return responseUtil.success(
             newAccommodationBooking,
@@ -87,7 +87,7 @@ public class AccommodationBookingController {
     @PutMapping(UPDATE_BOOKING)
     public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> updateAccommodationBooking(
         @PathVariable UUID bookingID, 
-        @RequestBody AddBookingRequestDTO accommodationBooking
+        @RequestBody BookingRequestDTO accommodationBooking
     ) {
         AccommodationBookingResponseDTO updatedAccommodationBooking = accommodationBookingService.updateBooking(bookingID, accommodationBooking);
         return responseUtil.success(
@@ -97,12 +97,12 @@ public class AccommodationBookingController {
         );
     }
 
-    @PostMapping(PAY_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> payAccommodationBooking(@PathVariable UUID bookingID) {
-        AccommodationBookingResponseDTO newAccommodationBooking = accommodationBookingService.payBooking(bookingID);
+    @PutMapping(UPDATE_BOOKING_STATUS)
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> updateAccommodationBookingStatus(@PathVariable UUID bookingID) {
+        AccommodationBookingResponseDTO newAccommodationBooking = accommodationBookingService.updateBookingStatus(bookingID);
         return responseUtil.success(
             newAccommodationBooking,
-            "Accommodation booking paid successfully",
+            "Accommodation booking status updated successfully",
             HttpStatus.CREATED
         );
     }

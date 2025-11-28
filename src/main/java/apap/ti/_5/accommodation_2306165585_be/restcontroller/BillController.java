@@ -1,11 +1,5 @@
 package apap.ti._5.accommodation_2306165585_be.restcontroller;
 
-import org.springframework.web.bind.annotation.RestController;
-
-import apap.ti._5.accommodation_2306165585_be.service.bill.BillService;
-import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,14 +11,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.BillCouponDTO;
-import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.CreateBillRequestDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.BillRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.bill.BillResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.service.bill.BillService;
+import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
+import lombok.extern.slf4j.Slf4j;
 
 
 @RestController
@@ -42,6 +41,7 @@ public class BillController {
     public static final String VIEW_SERVICE_BILL = BASE_URL + "/{serviceName}";
     public static final String VIEW_BILL_DETAILS = BASE_URL + "/detail/{billId}";
     public static final String CREATE_BILL = BASE_URL + "/create";
+    public static final String UPDATE_BILL = BASE_URL + "/update/{billId}";
     public static final String PAY_BILL = BASE_URL + "/{billId}/pay";
 
 
@@ -103,6 +103,14 @@ public class BillController {
         );
     }
 
+    /**
+     * Get all bills of a customer for a specific service with optional filters on status and customer ID
+     * 
+     * @param serviceName The name of the service to filter on
+     * @param status The status to filter on
+     * @param customerID The customer ID to filter on
+     * @return A list of bills that match the given filters
+     */
     @GetMapping(VIEW_SERVICE_BILL)
     public ResponseEntity<BaseResponseDTO<List<BillResponseDTO>>> getServiceBills(
         @PathVariable String serviceName,
@@ -123,6 +131,29 @@ public class BillController {
         );
     }
 
+    /**
+     * Update a new bill with the given information
+     * 
+     * @param bill The information of the bill to be created
+     * @return The created bill with a success message and HTTP status code of CREATED
+     */
+    @PutMapping(CREATE_BILL)
+    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> updateBill(@RequestBody BillRequestDTO bill, @PathVariable UUID billId) {
+        BillResponseDTO newBill = billService.updateBill(bill, billId);
+        return responseUtil.success(
+            newBill,
+            "Bill updated successfully",
+            HttpStatus.OK
+        );
+    }
+
+
+    /**
+     * Get the details of a bill by its ID
+     * 
+     * @param billId The ID of the bill to fetch
+     * @return A bill response DTO containing the bill's details
+     */
     @GetMapping(VIEW_BILL_DETAILS)
     public ResponseEntity<BaseResponseDTO<BillResponseDTO>> getBillDetails(@PathVariable UUID billId) {
         BillResponseDTO bill = billService.getBillDetails(billId);
@@ -169,7 +200,7 @@ public class BillController {
      * @return The created bill with a success message and HTTP status code of CREATED
      */
     @PostMapping(CREATE_BILL)
-    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> createBill(@RequestBody CreateBillRequestDTO bill) {
+    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> createBill(@RequestBody BillRequestDTO bill) {
         BillResponseDTO newBill = billService.createBill(bill);
         return responseUtil.success(
             newBill,

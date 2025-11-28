@@ -23,9 +23,10 @@ public class ApiKeyFilter extends OncePerRequestFilter {
     @Value("${accommodation-be.app.apiKey}")
     private String apiKey;
 
-    private final List<String> protectedPaths = List.of(
+    private final List<String> protectedPaths = List.of(BillController.CREATE_BILL,
+        AccommodationBookingController.UPDATE_BOOKING_STATUS,
         BillController.CREATE_BILL,
-        AccommodationBookingController.PAY_BOOKING
+        BillController.UPDATE_BILL
     );
 
     @Override
@@ -39,7 +40,6 @@ public class ApiKeyFilter extends OncePerRequestFilter {
 
         if (needApiKey) {
             String requestApiKey = request.getHeader("API-KEY");
-            log.info("API-KEY from request: {}", requestApiKey);
             if (requestApiKey == null || !requestApiKey.equals(apiKey)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Invalid API Key");

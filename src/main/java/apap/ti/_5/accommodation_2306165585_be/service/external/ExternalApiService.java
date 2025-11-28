@@ -10,7 +10,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -19,11 +18,12 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.http.MediaType;
 
-import apap.ti._5.accommodation_2306165585_be.restdto.external.response.VerifyTokenResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.external.response.LoginJwtResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.external.response.UserInfoResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.BillRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
-import apap.ti._5.accommodation_2306165585_be.service.booking.AccommodationBookingService;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.bill.BillResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,8 +34,8 @@ public class ExternalApiService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Autowired
-    private AccommodationBookingService bookingService;
+    @Value("${external.accommodation-service-url}")
+    private String accommodationServiceUrl;
 
     @Value("${external.flight-service-url}")
     private String flightServiceUrl;
@@ -55,11 +55,19 @@ public class ExternalApiService {
     @Value("${credentials.admin-password}")
     private String adminPassword;
 
+    @Value("${accommodation-be.app.apiKey}")
+    private String apiKey;
+
     private String cachedAdminToken = null;
     private Long cachedAdminTokenExpiry = null;
 
-
-    private HttpHeaders createHeaders() {
+    
+    /**      
+     *  Creates HTTP headers for the given HTTP request.
+     *  If the request has a valid "Authorization" header, it is copied to the headers.
+     *  @return The created HTTP headers.
+     */ 
+    private HttpHeaders createHeaders(boolean withApiKey) {
         HttpHeaders headers = new HttpHeaders();
 
         // Get token from current HTTP request
@@ -70,11 +78,22 @@ public class ExternalApiService {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 headers.set("Authorization", authHeader);
             }
+
+            if (withApiKey) {
+                headers.set("API-KEY", apiKey);
+            }
         }
 
         return headers;
     }
-    public String getAdminToken() {
+
+    /**
+     * Gets an admin token from the flight service.
+     * If a valid JWT token already exists, it is returned.
+     * Otherwise, a new token is obtained and cached.
+     * @return the admin token
+     */
+    private String getAdminToken() {
 
         Long now = System.currentTimeMillis();
 
@@ -111,7 +130,16 @@ public class ExternalApiService {
         return token;
     }
 
-
+    /**
+     * Deduct the payment amount from the user's balance.
+     * @param userID the user's ID
+     * @param userBalance the user's current balance
+     * @param paymentAmount the payment amount to deduct
+     * @return the user info response including the new balance
+     * @throws IllegalStateException if the admin token is null or empty, or if the service returned an error status
+     * @throws HttpClientErrorException if there is an HTTP error while deducting the balance
+     * @throws RuntimeException if there is an unexpected error while deducting the balance
+     */
     public UserInfoResponseDTO deductBalance(UUID userID, Long userBalance, Long paymentAmount) {
         try {
             String adminToken = getAdminToken();
@@ -166,10 +194,94 @@ public class ExternalApiService {
         }
     }
 
+    /**
+     * Update the booking status of a service.
+     * @param serviceName the name of the service (Accommodation, Flight, Insurance, VehicleRental, TourPackage)
+     * @param serviceReferenceID the reference ID of the booking
+     */
+    public void updateServicesBookingStatus(String serviceName, String serviceReferenceID) {
+        switch (serviceName) {
+            case "Accommodation":
+                updateAccommodationBookingStatus(serviceReferenceID);
+                break;
+            // case "Flight":
+            //     updateFlightBookingStatus(serviceReferenceID);
+            //     break;
+            // case "Insurance":
+            //     updateInsuranceBookingStatus(serviceReferenceID);
+            //     break;
+            // case "VehicleRental":
+            //     updateRentalBookingStatus(serviceReferenceID);
+            //     break;
+            // case "TourPackage":
+            //     updateTourBookingStatus(serviceReferenceID);
+            //     break;
+            default:
+                log.error("Unknown service name: {}", serviceName);
+                throw new IllegalArgumentException("Unknown service name: " + serviceName);
+        }
+    }
+
+    /**
+     * Create a new bill with the given information.
+     * @param request the information of the bill to be created
+     * @return the created bill with a success message and HTTP status code of CREATED
+     * @throws IllegalStateException if the service returned an error status
+     */
+    public BillResponseDTO createBill(BillRequestDTO request) {
+        HttpEntity<BillRequestDTO> entity = new HttpEntity<>(request, createHeaders(true));
+        log.info("Sending to bill-service: {}", request.toString());
+
+        // Call service
+        String url = accommodationServiceUrl + "/api/bill/create";
+        try {
+            ResponseEntity<BaseResponseDTO<BillResponseDTO>> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<BaseResponseDTO<BillResponseDTO>>() {}
+            );
+            return response.getBody().getData();
+        } catch (HttpClientErrorException e) {
+            log.error("POST /api/bill/create returned non-OK status: {}", e.getMessage());
+            throw new IllegalStateException("Failed to create bill: service returned " + e.getMessage());
+        } catch (SecurityException e) {
+            log.error("POST /api/bill/create returned non-OK status: {}", e.getMessage());
+            throw new IllegalStateException("Failed to create bill: service returned " + e.getMessage());
+        } catch (Exception e) {
+            log.error("POST /api/bill/create returned non-OK status: {}", e.getMessage());
+            throw new IllegalStateException("Failed to create bill: service returned " + e.getMessage());
+        }
+    }
+
+    public AccommodationBookingResponseDTO updateAccommodationBookingStatus(String serviceReferenceID) {
+        // Call service
+        String url = accommodationServiceUrl + "/api/booking/update/status" + serviceReferenceID;
+
+        try {
+            ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> response;
+            response = restTemplate.exchange(
+                    url,
+                    HttpMethod.PUT,
+                    new HttpEntity<>(createHeaders(true)),
+                    new ParameterizedTypeReference<BaseResponseDTO<AccommodationBookingResponseDTO>>() {}
+            );
+            if (response.getStatusCode().isError()) {
+                log.error("PUT /api/booking/update/status returned non-OK status: {}", response.getStatusCode());
+                throw new IllegalStateException("Failed to update Accommodation booking status: service returned " + response.getStatusCode());
+            }
+
+            return response.getBody().getData();
+        } catch (HttpClientErrorException e) {
+            log.error("HTTP error while updating Accommodation booking status: {}", e.getMessage());
+            throw e;
+        }
+    }
+
     public UserInfoResponseDTO getUserDetail(UUID userId) {
         try {
             String url = flightServiceUrl + "/api/users/" + userId;
-            HttpEntity<?> entity = new HttpEntity<>(createHeaders());
+            HttpEntity<?> entity = new HttpEntity<>(createHeaders(false));
 
             ResponseEntity<BaseResponseDTO<UserInfoResponseDTO>> response = restTemplate.exchange(
                 url,
@@ -209,5 +321,7 @@ public class ExternalApiService {
             return null;
         }
     }
+
+
 
 }

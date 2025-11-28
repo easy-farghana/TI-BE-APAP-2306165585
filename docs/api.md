@@ -11,6 +11,8 @@ See: [BillController.java](../src/main/java/apap/ti/_5/accommodation_2306165585_
 
 ### 1. [POST] CREATE BILL
 
+`API-KEY` is needed in header for this request
+
 Send a request `/api/bill/create`:
 ```json
 {
@@ -22,7 +24,7 @@ Send a request `/api/bill/create`:
 }
 
 ```
-See: [CreateBillRequestDTO.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/restdto/request/bill/CreateBillRequestDTO.java)
+See: [BillRequestDTO.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/restdto/request/bill/BillRequestDTO.java)
 
 Response:
 
@@ -56,7 +58,56 @@ Response:
 ```
 See: [BillResponseDTO.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/restdto/response/bill/BillResponseDTO.java)
 
-###  2. [POST] PAY BILL
+### 2. [PUT] UPDATE BILL
+
+`API-KEY` is needed in header for this request
+
+Send a request `/api/bill/update/{billId}`:
+```json
+{
+    "customerID" : "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+    "serviceName" : "Flight", // Must be one of  "Flight", "Accommodation", "Insurance", "VehicleRental", "TourPackage"
+    "serviceReferenceID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d", // The id of order (example: BookingID) 
+    "description": "Tiket pulang pergi Jambi-Jakarta",
+    "amount" : 2000000
+}
+
+```
+See: [BillRequestDTO.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/restdto/request/bill/BillRequestDTO.java)
+
+Response:
+
+```json
+// success
+{
+    "status": 201,
+    "message": "Bill created successfully",
+    "timestamp": "2025-11-26T14:27:18.250+07:00",
+    "data": {
+        "billID": "0578b6ff-57e4-448b-952a-919474817639",
+        "customerID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+        "serviceName": "Flight",
+        "serviceReferenceID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+        "description": "Tiket pulang pergi Jambi-Jakarta",
+        "status": 0,
+        "amount": 2000000,
+        "createdAt": "2025-11-26T14:27:18.1433626",
+        "updatedAt": "2025-11-26T14:27:18.1433626",
+        "paymentTimestamp": null
+    }
+}
+
+// insufficient balance
+{
+    "status": 400,
+    "message": "Permintaan tidak valid: Insufficient balance. Please top up balance.",
+    "timestamp": "2025-11-26T14:54:50.829+07:00",
+    "data": null
+}
+```
+See: [BillResponseDTO.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/restdto/response/bill/BillResponseDTO.java)
+
+###  3. [POST] PAY BILL
 
 Send a request `/api/bill/{billId}/pay`:
 
@@ -90,7 +141,7 @@ Response:
 ```
 See: [BillResponseDTO.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/restdto/response/bill/BillResponseDTO.java)
 
-### 3. [GET] ALL BILLS
+### 4. [GET] ALL BILLS
 
 request: `/api/bill`
 
@@ -128,7 +179,7 @@ response:
     ]
 }
 ```
-### 4. [GET] ALL BILLS (Services only)
+### 5. [GET] ALL BILLS (Services only)
 
 request: `/api/bill/{serviceName}`
 response:
@@ -166,7 +217,7 @@ response:
 }
 ```
 
-### 5. [GET] ALL CUSTOMER'S BILLS
+### 6. [GET] ALL CUSTOMER'S BILLS
 
 request: `/api/bill/customer`
 
@@ -205,7 +256,7 @@ response:
 }
 ```
 
-### 6. [GET] BILLS DETAILS
+### 7. [GET] BILLS DETAILS
 
 request: `api/bill/detail/{billId}`
 response:

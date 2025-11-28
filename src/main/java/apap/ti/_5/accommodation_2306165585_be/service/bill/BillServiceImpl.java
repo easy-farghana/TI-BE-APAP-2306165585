@@ -13,13 +13,13 @@ import org.springframework.stereotype.Service;
 import apap.ti._5.accommodation_2306165585_be.exception.NotFoundException;
 import apap.ti._5.accommodation_2306165585_be.model.Bill;
 import apap.ti._5.accommodation_2306165585_be.repository.BillRepository;
-import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.CreateBillRequestDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.BillRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.bill.BillResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
 import apap.ti._5.accommodation_2306165585_be.security.UserContext;
 import apap.ti._5.accommodation_2306165585_be.service.external.ExternalApiService;
 import apap.ti._5.accommodation_2306165585_be.restdto.external.response.UserInfoResponseDTO;
-
+import apap.ti._5.accommodation_2306165585_be.exception.SecurityException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +41,7 @@ public class BillServiceImpl implements BillService {
     );
 
     @Override
-    public BillResponseDTO createBill(CreateBillRequestDTO billDTO) {
+    public BillResponseDTO createBill(BillRequestDTO billDTO) {
         
         if (!VALID_SERVICES.contains(billDTO.getServiceName())) {
             throw new IllegalArgumentException(
@@ -67,8 +67,40 @@ public class BillServiceImpl implements BillService {
         bill.setDescription(billDTO.getDescription());
         bill.setAmount(billDTO.getAmount());
         bill.setStatus(0);
+        billRepository.save(bill);
 
         log.info("Saving new bill {}", bill);
+        return mapToBillResponseDTO(bill);
+    }
+
+    @Override
+    public BillResponseDTO updateBill(BillRequestDTO billDTO, UUID billId) {
+        Bill bill = billRepository.findById(billId).orElseThrow(
+            () -> new NotFoundException("Bill with id: " + billId + " not found.")
+        );
+        if (!VALID_SERVICES.contains(billDTO.getServiceName())) {
+            throw new IllegalArgumentException(
+                "Invalid service name: " + billDTO.getServiceName() +
+                ". Must be one of: " + VALID_SERVICES
+            );
+        }
+
+       
+        if (bill.getStatus() == 1) {
+            throw new IllegalArgumentException("Cannot update paid bill");
+        }
+        boolean isSameCustomer = bill.getCustomerID().equals(billDTO.getCustomerID()); 
+        boolean isSameService = bill.getServiceName().equals(billDTO.getServiceName());
+        boolean isSameReferenceID = bill.getServiceReferenceID().equals(billDTO.getServiceReferenceID());
+
+        if (!isSameCustomer) throw new IllegalArgumentException("Customer ID cannot be changed");
+        if (!isSameService) throw new IllegalArgumentException("Service name cannot be changed");
+        if (!isSameReferenceID) throw new IllegalArgumentException("Service Reference ID cannot be changed");
+
+        bill.setDescription(billDTO.getDescription());
+        bill.setAmount(billDTO.getAmount());
+
+        log.info("Updating bill {}", bill);
 
         billRepository.save(bill);
         return mapToBillResponseDTO(bill);
@@ -206,6 +238,9 @@ public class BillServiceImpl implements BillService {
         
         // Deduct balance via profile service
         externalApiService.deductBalance(userID, userSaldo, paymentAmount);
+
+        // callback
+        externalApiService.updateServicesBookingStatus(bill.getServiceName(), bill.getServiceReferenceID());
 
         // Update bill
         bill.setStatus(1);

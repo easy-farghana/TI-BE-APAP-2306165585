@@ -24,8 +24,6 @@ public class AccommodationBookingResponseDTO {
     private String customerEmail;
     private String customerPhone;
     private boolean isBreakfast;
-    private int refund;
-    private int extraPay;
     private int capacity;
     private String roomName;
     private UUID roomID;

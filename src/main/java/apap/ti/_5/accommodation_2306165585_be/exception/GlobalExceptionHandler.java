@@ -41,6 +41,13 @@ public class GlobalExceptionHandler {
         return responseUtil.error("Gagal menyimpan data baru karena konflik dalam data: " + ex.getMessage(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<?> handleSecurityException(SecurityException ex) {
+        log.warn("Unauthorized: {}", ex.getMessage(), ex);
+        return responseUtil.error("Unauthorized: " + ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
+
     // === Validation-related exceptions ===
 
     // For @Valid violations in @RequestBody (e.g. POST with invalid DTO)

@@ -9,7 +9,7 @@ import apap.ti._5.accommodation_2306165585_be.repository.AccommodationBookingRep
 import apap.ti._5.accommodation_2306165585_be.repository.PropertyRepository;
 import apap.ti._5.accommodation_2306165585_be.repository.RoomRepository;
 import apap.ti._5.accommodation_2306165585_be.repository.RoomTypeRepository;
-import apap.ti._5.accommodation_2306165585_be.restdto.request.booking.AddBookingRequestDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.booking.BookingRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AllBookingResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
@@ -58,7 +58,7 @@ class AccommodationBookingServiceImplTest {
     private RoomType testRoomType;
     private Property testProperty;
     private AccommodationBooking testBooking;
-    private AddBookingRequestDTO testRequest;
+    private BookingRequestDTO testRequest;
 
     @BeforeEach
     void setUp() {
@@ -103,7 +103,7 @@ class AccommodationBookingServiceImplTest {
                 .build();
 
         // Setup test request
-        testRequest = new AddBookingRequestDTO();
+        testRequest = new BookingRequestDTO();
         testRequest.setRoomID("PROP12345678-R001");
         testRequest.setRoomTypeID("RT001");
         testRequest.setCheckInDate(LocalDateTime.of(2025, 12, 20, 14, 0));
@@ -380,7 +380,7 @@ class AccommodationBookingServiceImplTest {
         when(bookingRepository.save(any())).thenReturn(testBooking);
 
         // Act
-        AccommodationBookingResponseDTO result = bookingService.payBooking(testBooking.getBookingID());
+        AccommodationBookingResponseDTO result = bookingService.updateBookingStatus(testBooking.getBookingID());
 
         // Assert
         assertNotNull(result);
@@ -398,7 +398,7 @@ class AccommodationBookingServiceImplTest {
         when(bookingRepository.save(any())).thenReturn(testBooking);
 
         // Act
-        AccommodationBookingResponseDTO result = bookingService.payBooking(testBooking.getBookingID());
+        AccommodationBookingResponseDTO result = bookingService.updateBookingStatus(testBooking.getBookingID());
 
         // Assert
         assertNotNull(result);
@@ -414,7 +414,7 @@ class AccommodationBookingServiceImplTest {
 
         // Act & Assert
         assertThrows(ConstraintViolationException.class, () -> {
-            bookingService.payBooking(testBooking.getBookingID());
+            bookingService.updateBookingStatus(testBooking.getBookingID());
         });
     }
 

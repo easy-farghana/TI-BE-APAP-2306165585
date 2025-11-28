@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class AddBookingRequestDTO {
+public class BookingRequestDTO {
     
     @NotNull(message = "roomID tidak boleh kosong")
     private UUID roomID;

@@ -33,6 +33,8 @@ import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
 import apap.ti._5.accommodation_2306165585_be.security.UserContext;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import apap.ti._5.accommodation_2306165585_be.service.roomtype.RoomTypeService;
+import apap.ti._5.accommodation_2306165585_be.exception.SecurityException;
+
 import jakarta.transaction.Transactional;
 
 @Service

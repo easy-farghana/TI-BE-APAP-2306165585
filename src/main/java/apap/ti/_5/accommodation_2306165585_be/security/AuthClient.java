@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import apap.ti._5.accommodation_2306165585_be.exception.SecurityException;
 import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
@@ -54,6 +55,9 @@ public class AuthClient {
             return response.getBody().getData();
         } catch (HttpClientErrorException.Unauthorized e) {
             log.warn("Token not valid or expired: " + e.getMessage());
+            throw new SecurityException("Token not valid or expired: " + e.getMessage());
+        } catch (SecurityException e) {
+            log.error("Error verifying token: " + e.getMessage(), e);
             throw new SecurityException("Token not valid or expired: " + e.getMessage());
         } catch (Exception e) {
             log.error("Error verifying token: " + e.getMessage(), e);
