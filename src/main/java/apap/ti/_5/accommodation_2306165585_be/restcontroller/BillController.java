@@ -23,6 +23,7 @@ import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.bill.BillResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.service.bill.BillService;
 import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -94,7 +95,7 @@ public class BillController {
         params.put("sortBy", sortBy);
         params.put("sortDir", sortDir);
 
-        List<BillResponseDTO> allBill = billService.getAllBills(params);
+        List<BillResponseDTO> allBill = billService.getCustomerBills(params);
 
         return responseUtil.success(
             allBill,
@@ -137,8 +138,8 @@ public class BillController {
      * @param bill The information of the bill to be created
      * @return The created bill with a success message and HTTP status code of CREATED
      */
-    @PutMapping(CREATE_BILL)
-    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> updateBill(@RequestBody BillRequestDTO bill, @PathVariable UUID billId) {
+    @PutMapping(UPDATE_BILL)
+    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> updateBill(@Valid @RequestBody BillRequestDTO bill, @PathVariable UUID billId) {
         BillResponseDTO newBill = billService.updateBill(bill, billId);
         return responseUtil.success(
             newBill,
@@ -200,7 +201,7 @@ public class BillController {
      * @return The created bill with a success message and HTTP status code of CREATED
      */
     @PostMapping(CREATE_BILL)
-    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> createBill(@RequestBody BillRequestDTO bill) {
+    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> createBill(@Valid @RequestBody BillRequestDTO bill) {
         BillResponseDTO newBill = billService.createBill(bill);
         return responseUtil.success(
             newBill,

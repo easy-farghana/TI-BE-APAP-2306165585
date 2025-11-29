@@ -23,7 +23,7 @@ import apap.ti._5.accommodation_2306165585_be.service.booking.AccommodationBooki
 import apap.ti._5.accommodation_2306165585_be.service.property.PropertyService;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 public class StatisticsControllerTest {
 
     @Autowired

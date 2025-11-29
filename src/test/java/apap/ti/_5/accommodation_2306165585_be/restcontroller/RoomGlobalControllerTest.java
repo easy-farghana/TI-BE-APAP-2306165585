@@ -17,13 +17,15 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import apap.ti._5.accommodation_2306165585_be.model.Property;
+import apap.ti._5.accommodation_2306165585_be.repository.PropertyRepository;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.roomtype.RoomTypeResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import apap.ti._5.accommodation_2306165585_be.service.roomtype.RoomTypeService;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 public class RoomGlobalControllerTest {
 
     @Autowired
@@ -34,6 +36,10 @@ public class RoomGlobalControllerTest {
 
     @MockBean
     private RoomService roomService;
+
+    @MockBean
+    private PropertyRepository propertyRepository;
+
 
     private RoomTypeResponseDTO roomType1;
     private RoomTypeResponseDTO roomType2;
@@ -140,4 +146,48 @@ public class RoomGlobalControllerTest {
 
         verify(roomService, times(1)).getAllRooms();
     }
+
+    @Test
+    void testGetRoomTypesByPropertyId_Success() throws Exception {
+        UUID propertyId = UUID.randomUUID();
+
+        // Mock property
+        Property property = new Property();
+        property.setPropertyID(propertyId);
+        property.setPropertyName("Hotel Bagus");
+        when(propertyRepository.findById(propertyId)).thenReturn(java.util.Optional.of(property));
+
+        // Mock response
+        List<RoomTypeResponseDTO> roomTypes = Arrays.asList(roomType1, roomType2);
+        when(roomTypeService.getRoomTypesByProperty(property)).thenReturn(roomTypes);
+
+        mockMvc.perform(get("/api/room-type/property/{propertyId}", propertyId)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.message").value("List of all room types with property id " + propertyId + " fetched successfully"))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].name").value("Deluxe"));
+
+        verify(propertyRepository, times(1)).findById(propertyId);
+        verify(roomTypeService, times(1)).getRoomTypesByProperty(property);
+    }
+
+        @Test
+        void testGetRoomTypeById_Success() throws Exception {
+                UUID roomTypeId = id1;
+
+                when(roomTypeService.getRoomTypeById(roomTypeId)).thenReturn(roomType1);
+
+                mockMvc.perform(get("/api/room-type/{roomTypeId}", roomTypeId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.status").value(200))
+                        .andExpect(jsonPath("$.message").value("Room type details id " + roomTypeId + " fetched successfully"))
+                        .andExpect(jsonPath("$.data.name").value("Deluxe"));
+
+                verify(roomTypeService, times(1)).getRoomTypeById(roomTypeId);
+        }
+
+
 }

@@ -204,18 +204,18 @@ public class ExternalApiService {
             case "Accommodation":
                 updateAccommodationBookingStatus(serviceReferenceID);
                 break;
-            // case "Flight":
-            //     updateFlightBookingStatus(serviceReferenceID);
-            //     break;
-            // case "Insurance":
-            //     updateInsuranceBookingStatus(serviceReferenceID);
-            //     break;
-            // case "VehicleRental":
-            //     updateRentalBookingStatus(serviceReferenceID);
-            //     break;
-            // case "TourPackage":
-            //     updateTourBookingStatus(serviceReferenceID);
-            //     break;
+            case "Flight":
+                // updateFlightBookingStatus(serviceReferenceID);
+                break;
+            case "Insurance":
+                // updateInsuranceBookingStatus(serviceReferenceID);
+                break;
+            case "VehicleRental":
+                // updateRentalBookingStatus(serviceReferenceID);
+                break;
+            case "TourPackage":
+                // updateTourBookingStatus(serviceReferenceID);
+                break;
             default:
                 log.error("Unknown service name: {}", serviceName);
                 throw new IllegalArgumentException("Unknown service name: " + serviceName);
@@ -256,7 +256,7 @@ public class ExternalApiService {
 
     public AccommodationBookingResponseDTO updateAccommodationBookingStatus(String serviceReferenceID) {
         // Call service
-        String url = accommodationServiceUrl + "/api/booking/update/status" + serviceReferenceID;
+        String url = accommodationServiceUrl + "/api/booking/update/status/" + serviceReferenceID;
 
         try {
             ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> response;

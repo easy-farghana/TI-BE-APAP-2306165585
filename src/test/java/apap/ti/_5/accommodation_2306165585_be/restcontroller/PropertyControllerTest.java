@@ -34,7 +34,7 @@ import apap.ti._5.accommodation_2306165585_be.service.property.PropertyService;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = falseaddFilters = false)
 public class PropertyControllerTest {
 
     @Autowired

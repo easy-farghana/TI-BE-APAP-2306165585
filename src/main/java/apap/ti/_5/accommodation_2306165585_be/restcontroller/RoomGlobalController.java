@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import apap.ti._5.accommodation_2306165585_be.service.roomtype.RoomTypeService;
 import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.UUID;
@@ -42,7 +43,7 @@ public class RoomGlobalController {
     PropertyRepository propertyRepository;
 
     public static final String BASE_URL_TYPE = "/room-type";
-    public static final String VIEW_TYPES_BY_PROPERTY = BASE_URL_TYPE + "property/{propertyId}";
+    public static final String VIEW_TYPES_BY_PROPERTY = BASE_URL_TYPE + "//property/{propertyId}";
     public static final String VIEW_TYPE = BASE_URL_TYPE + "/{roomTypeId}";
     public static final String CREATE_TYPE = BASE_URL_TYPE + "/create";
 
@@ -86,7 +87,7 @@ public class RoomGlobalController {
 
 
     @GetMapping(CREATE_TYPE)
-    public ResponseEntity<BaseResponseDTO<RoomTypeResponseDTO>> createRoomType(@RequestBody AddSingularRoomTypeDTO request) {
+    public ResponseEntity<BaseResponseDTO<RoomTypeResponseDTO>> createRoomType(@Valid @RequestBody AddSingularRoomTypeDTO request) {
         RoomTypeResponseDTO roomType = roomTypeService.createRoomType(request);
         return responseUtil.success(
             roomType,

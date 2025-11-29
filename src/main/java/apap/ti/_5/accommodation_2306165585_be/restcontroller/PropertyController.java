@@ -29,6 +29,7 @@ import apap.ti._5.accommodation_2306165585_be.restdto.response.property.Property
 import apap.ti._5.accommodation_2306165585_be.service.property.PropertyService;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api")
@@ -148,7 +149,7 @@ public class PropertyController {
     }
 
     @PostMapping(CREATE_PROPERTY)
-    public ResponseEntity<BaseResponseDTO<PropertyResponseDTO>> createProperty(@RequestBody PropertyTransactionRequest request) {
+    public ResponseEntity<BaseResponseDTO<PropertyResponseDTO>> createProperty(@Valid @RequestBody PropertyTransactionRequest request) {
         PropertyResponseDTO propertyDTO = propertyService.createPropertyTransaction(request);
         return responseUtil.success(
             propertyDTO,
@@ -158,7 +159,7 @@ public class PropertyController {
     }
 
     @PutMapping(UPDATE_PROPERTY)
-    public ResponseEntity<BaseResponseDTO<PropertyResponseDTO>> updateProperty(@RequestBody UpdatePropertyTransactionRequest request) {
+    public ResponseEntity<BaseResponseDTO<PropertyResponseDTO>> updateProperty(@Valid @RequestBody UpdatePropertyTransactionRequest request) {
         PropertyResponseDTO propertyDTO = propertyService.updatePropertyTransaction(request);
         return responseUtil.success(
             propertyDTO,

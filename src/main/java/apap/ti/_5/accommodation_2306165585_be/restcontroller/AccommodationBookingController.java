@@ -23,6 +23,7 @@ import apap.ti._5.accommodation_2306165585_be.restdto.response.statistics.Income
 import apap.ti._5.accommodation_2306165585_be.service.booking.AccommodationBookingService;
 import apap.ti._5.accommodation_2306165585_be.service.property.PropertyService;
 import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
+import jakarta.validation.Valid;
 
 
 
@@ -37,8 +38,8 @@ public class AccommodationBookingController {
     public static final String BASE_URL = "/booking";
     public static final String VIEW_BOOKING = BASE_URL + "/{bookingID}";
     public static final String CREATE_BOOKING = BASE_URL + "/create";
-    public static final String UPDATE_BOOKING_STATUS = BASE_URL + "/update/status{bookingID}";
-    public static final String REFUND_BOOKING = BASE_URL + "/refund/{bookingID}"; 
+    public static final String UPDATE_BOOKING_STATUS = BASE_URL + "/update/status/{bookingID}";
+    // public static final String REFUND_BOOKING = BASE_URL + "/refund/{bookingID}"; 
     public static final String CANCEL_BOOKING = BASE_URL + "/cancel/{bookingID}";
     public static final String UPDATE_BOOKING = BASE_URL + "/update/{bookingID}";
     
@@ -55,7 +56,7 @@ public class AccommodationBookingController {
 
 
     @GetMapping(BASE_URL)
-    public ResponseEntity<BaseResponseDTO<List<AllBookingResponseDTO>>> getAllRoomType() {
+    public ResponseEntity<BaseResponseDTO<List<AllBookingResponseDTO>>> getAllBookingsings() {
         List<AllBookingResponseDTO> listBooking = accommodationBookingService.getAllAccommodationBookings();
         return responseUtil.success(
             listBooking,
@@ -75,7 +76,7 @@ public class AccommodationBookingController {
     }
 
     @PostMapping(CREATE_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> createAccommodationBooking(@RequestBody BookingRequestDTO accommodationBooking) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> createAccommodationBooking(@Valid @RequestBody BookingRequestDTO accommodationBooking) {
         AccommodationBookingResponseDTO newAccommodationBooking = accommodationBookingService.createBooking(accommodationBooking);
         return responseUtil.success(
             newAccommodationBooking,
@@ -107,15 +108,6 @@ public class AccommodationBookingController {
         );
     }
 
-    @PostMapping(REFUND_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> refundAccommodationBooking(@PathVariable UUID bookingID) {
-        AccommodationBookingResponseDTO newAccommodationBooking = accommodationBookingService.giveRefund(bookingID);
-        return responseUtil.success(
-            newAccommodationBooking,
-            "Accommodation booking refunded successfully",
-            HttpStatus.CREATED
-        );
-    }
 
     @PostMapping(CANCEL_BOOKING)
     public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> cancelAccommodationBooking(@PathVariable UUID bookingID) {

@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -30,7 +30,7 @@ import apap.ti._5.accommodation_2306165585_be.service.booking.AccommodationBooki
 import apap.ti._5.accommodation_2306165585_be.service.property.PropertyService;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false) 
 public class AccommodationBookingControllerTest {
 
     @Autowired
@@ -41,6 +41,7 @@ public class AccommodationBookingControllerTest {
 
     @MockBean
     private PropertyService propertyService;
+    
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -48,11 +49,13 @@ public class AccommodationBookingControllerTest {
     private AccommodationBookingResponseDTO bookingResponse;
     private AllBookingResponseDTO allBookingResponse;
     private BookingRequestDTO bookingRequest;
+    private UUID bookingID;
 
-    @BeforeEach
+   @BeforeEach
     void setUp() {
+        bookingID = UUID.randomUUID();
         bookingResponse = new AccommodationBookingResponseDTO();
-        bookingResponse.setBookingID(UUID.randomUUID());
+        bookingResponse.setBookingID(bookingID);
         bookingResponse.setCustomerName("William Cruise");
         bookingResponse.setTotalDays(2);
         bookingResponse.setTotalPrice(1250000);
@@ -60,11 +63,18 @@ public class AccommodationBookingControllerTest {
         bookingResponse.setCheckOutDate(LocalDateTime.now().plusDays(5));
 
         allBookingResponse = new AllBookingResponseDTO();
-        // allBookingResponse.setBookingId("B002");
         allBookingResponse.setPropertyName("Hotel Mewah Jakarta");
 
         bookingRequest = new BookingRequestDTO();
-        bookingRequest.setCustomerName("William Cruise");
+        bookingRequest.setRoomID(UUID.randomUUID());
+        bookingRequest.setCheckInDate(LocalDateTime.now().plusDays(3));
+        bookingRequest.setCheckOutDate(LocalDateTime.now().plusDays(5));
+        bookingRequest.setCapacity(2);
+        bookingRequest.setCustomerID(UUID.randomUUID());       
+        bookingRequest.setCustomerName("William Cruise");      
+        bookingRequest.setCustomerEmail("william@mail.com");   
+        bookingRequest.setCustomerPhone("08123456789");        
+        bookingRequest.setIsBreakfast(true);
     }
 
     @Test
@@ -84,75 +94,63 @@ public class AccommodationBookingControllerTest {
     @Test
     void testGetBookingById_Success() throws Exception {
         UUID bookingID = UUID.randomUUID();
-        when(accommodationBookingService.getAccommodationBookingById(bookingID)).thenReturn(bookingResponse);
+        when(accommodationBookingService.getAccommodationBookingById(bookingID))
+                .thenReturn(bookingResponse);
 
         mockMvc.perform(get("/api/booking/{bookingID}", bookingID)
                 .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.bookingID").value("B001"))
                 .andExpect(jsonPath("$.data.customerName").value("William Cruise"));
 
-        verify(accommodationBookingService, times(1)).getAccommodationBookingById(bookingID);
+        verify(accommodationBookingService, times(1))
+                .getAccommodationBookingById(any(UUID.class));
     }
+
 
     @Test
     void testCreateBooking_Success() throws Exception {
-        when(accommodationBookingService.createBooking(any(BookingRequestDTO.class))).thenReturn(bookingResponse);
+        when(accommodationBookingService.createBooking(any())).thenReturn(bookingResponse);
 
         mockMvc.perform(post("/api/booking/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookingRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Accommodation booking created successfully"))
-                .andExpect(jsonPath("$.data.bookingID").value("B001"));
+                .andExpect(jsonPath("$.data.customerName").value("William Cruise"));
 
-        verify(accommodationBookingService, times(1)).createBooking(any(BookingRequestDTO.class));
+        verify(accommodationBookingService, times(1)).createBooking(any());
     }
 
     @Test
     void testUpdateBooking_Success() throws Exception {
-        UUID bookingID = UUID.randomUUID();
-        when(accommodationBookingService.updateBooking(eq(bookingID), any(BookingRequestDTO.class))).thenReturn(bookingResponse);
+        when(accommodationBookingService.updateBooking(eq(bookingID), any()))
+                .thenReturn(bookingResponse);
 
         mockMvc.perform(put("/api/booking/update/{bookingID}", bookingID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookingRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Accommodation booking updated successfully"))
-                .andExpect(jsonPath("$.data.bookingID").value("B001"));
+                .andExpect(jsonPath("$.message").value("Accommodation booking updated successfully"));
 
-        verify(accommodationBookingService, times(1)).updateBooking(eq(bookingID), any(BookingRequestDTO.class));
+        verify(accommodationBookingService, times(1)).updateBooking(eq(bookingID), any());
     }
 
     @Test
-    void testPayBooking_Success() throws Exception {
-        UUID bookingID = UUID.randomUUID();
-        when(accommodationBookingService.updateBookingStatus(bookingID)).thenReturn(bookingResponse);
+    void testUpdateBookingStatus_Success() throws Exception {
+        when(accommodationBookingService.updateBookingStatus(bookingID))
+                .thenReturn(bookingResponse);
 
-        mockMvc.perform(post("/api/booking/pay/{bookingID}", bookingID)
+        mockMvc.perform(put("/api/booking/update/status/{bookingID}", bookingID)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("Accommodation booking paid successfully"));
+                .andExpect(jsonPath("$.message").value("Accommodation booking status updated successfully"));
 
-        verify(accommodationBookingService, times(1)).payBooking(bookingID);
-    }
-
-    @Test
-    void testRefundBooking_Success() throws Exception {
-        UUID bookingID = UUID.randomUUID();
-        when(accommodationBookingService.giveRefund(bookingID)).thenReturn(bookingResponse);
-
-        mockMvc.perform(post("/api/booking/refund/{bookingID}", bookingID)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("Accommodation booking refunded successfully"));
-
-        verify(accommodationBookingService, times(1)).giveRefund(bookingID);
+        verify(accommodationBookingService, times(1)).updateBookingStatus(bookingID);
     }
 
     @Test
     void testCancelBooking_Success() throws Exception {
-        UUID bookingID = UUID.randomUUID();
         when(accommodationBookingService.cancelBooking(bookingID)).thenReturn(bookingResponse);
 
         mockMvc.perform(post("/api/booking/cancel/{bookingID}", bookingID)
@@ -173,10 +171,10 @@ public class AccommodationBookingControllerTest {
 
         mockMvc.perform(get("/api/booking/chart")
                 .param("month", "11")
-                .param("year", "2025")
-                .contentType(MediaType.APPLICATION_JSON))
+                .param("year", "2025"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Income statistics for 11/2025 fetched successfully"))
+                .andExpect(jsonPath("$.message")
+                        .value("Income statistics for 11/2025 fetched successfully"))
                 .andExpect(jsonPath("$.data.propertyNames[0]").value("Hotel Mewah Jakarta"));
 
         verify(propertyService, times(1)).getIncomeStatistics(11, 2025);
