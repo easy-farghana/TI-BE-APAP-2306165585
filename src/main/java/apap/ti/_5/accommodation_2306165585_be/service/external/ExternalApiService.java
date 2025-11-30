@@ -272,6 +272,12 @@ public class ExternalApiService {
         }
     }
 
+    /**
+     * Update the status of a flight booking.
+     * @param serviceReferenceID the reference ID of the booking
+     * @throws IllegalStateException if the service returned an error status
+     * @throws HttpClientException if there is an HTTP error while updating the booking status
+     */
     public void updateFlightBookingStatus(String serviceReferenceID) {
         String url = flightServiceUrl + "/api/bookings/" + serviceReferenceID + "/status";
         Map<String, Object> body = new HashMap<>();
