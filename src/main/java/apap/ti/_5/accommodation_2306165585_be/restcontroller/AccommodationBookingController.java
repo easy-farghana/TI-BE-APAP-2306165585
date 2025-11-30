@@ -56,7 +56,7 @@ public class AccommodationBookingController {
 
 
     @GetMapping(BASE_URL)
-    public ResponseEntity<BaseResponseDTO<List<AllBookingResponseDTO>>> getAllBookingsings() {
+    public ResponseEntity<BaseResponseDTO<List<AllBookingResponseDTO>>> getAllBookings() {
         List<AllBookingResponseDTO> listBooking = accommodationBookingService.getAllAccommodationBookings();
         return responseUtil.success(
             listBooking,
@@ -66,7 +66,7 @@ public class AccommodationBookingController {
     }
 
     @GetMapping(VIEW_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> getAccommodationBookingById(@PathVariable UUID bookingID) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> getAccommodationBookingById(@PathVariable("bookingID") UUID bookingID) {
         AccommodationBookingResponseDTO accommodationBooking = accommodationBookingService.getAccommodationBookingById(bookingID);
         return responseUtil.success(
             accommodationBooking,
@@ -87,7 +87,7 @@ public class AccommodationBookingController {
 
     @PutMapping(UPDATE_BOOKING)
     public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> updateAccommodationBooking(
-        @PathVariable UUID bookingID, 
+        @PathVariable("bookingID") UUID bookingID, 
         @RequestBody BookingRequestDTO accommodationBooking
     ) {
         AccommodationBookingResponseDTO updatedAccommodationBooking = accommodationBookingService.updateBooking(bookingID, accommodationBooking);
@@ -99,7 +99,7 @@ public class AccommodationBookingController {
     }
 
     @PutMapping(UPDATE_BOOKING_STATUS)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> updateAccommodationBookingStatus(@PathVariable UUID bookingID) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> updateAccommodationBookingStatus(@PathVariable("bookingID") UUID bookingID) {
         AccommodationBookingResponseDTO newAccommodationBooking = accommodationBookingService.updateBookingStatus(bookingID);
         return responseUtil.success(
             newAccommodationBooking,
@@ -110,7 +110,7 @@ public class AccommodationBookingController {
 
 
     @PostMapping(CANCEL_BOOKING)
-    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> cancelAccommodationBooking(@PathVariable UUID bookingID) {
+    public ResponseEntity<BaseResponseDTO<AccommodationBookingResponseDTO>> cancelAccommodationBooking(@PathVariable("bookingID") UUID bookingID) {
         AccommodationBookingResponseDTO canceledBooking = accommodationBookingService.cancelBooking(bookingID);
         return responseUtil.success(canceledBooking,
             "Accommodation booking cancelled successfully",

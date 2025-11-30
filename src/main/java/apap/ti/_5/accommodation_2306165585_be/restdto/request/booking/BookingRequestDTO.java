@@ -28,7 +28,6 @@ public class BookingRequestDTO {
     @NotNull(message = "capacity tidak boleh kosong")
     private Integer capacity;
 
-    @NotNull(message = "customerId tidak boleh kosong")
     private UUID customerID;
     
     @NotBlank(message = "customerName tidak boleh kosong")

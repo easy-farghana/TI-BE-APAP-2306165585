@@ -268,7 +268,7 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
 
         UUID userID = userContext.getUserID();
 
-        if (!booking.getCustomerID().equals(userID)) {
+        if (booking.getCustomerID() != null && !booking.getCustomerID().equals(userID)) {
             throw new IllegalArgumentException("You cannot update booking that's not your own", null);
         }
 
@@ -376,27 +376,6 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         return mapToAccommodationBookingDTO(savedBooking);
     }
 
-    @Override
-    public AccommodationBookingResponseDTO giveRefund(UUID bookingID) {
-        throw new UnsupportedOperationException("Not supported yet.");
-        // AccommodationBooking booking = bookingRepository.findById(bookingID).orElseThrow(
-        //     () -> new NotFoundException("Booking not found with ID: " + bookingID)
-        // );
-        
-        // Room room = booking.getRoom();
-        // RoomType roomType = room.getRoomType();
-        // Property property = roomType.getProperty();
-
-        // int income = property.getIncome();
-        // property.setIncome(income - booking.getRefund());
-        // propertyRepository.save(property);
-
-        // // Asumsi: Memberikan refund akan mengembalikan status menjadi 1
-        // booking.setStatus(1);
-
-        // AccommodationBooking savedBooking = bookingRepository.save(booking);
-        // return mapToAccommodationBookingDTO(savedBooking);
-    }
 
     private boolean isValidUpdateRequest(
         BookingRequestDTO request, 
@@ -405,16 +384,21 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         RoomType roomType
     ) {
 
+        boolean isNotPaid = booking.getStatus() != 1;
         boolean isSameRoom = room.getRoomID().equals(booking.getRoom().getRoomID());
         boolean isSameRoomType = roomType.getRoomTypeID().equals(booking.getRoom().getRoomType().getRoomTypeID());
         boolean isSameProperty = roomType.getProperty().getPropertyID().equals(booking.getRoom().getRoomType().getProperty().getPropertyID());
-        boolean isSameCustomerId = request.getCustomerID().equals(booking.getCustomerID());
-        boolean isSameCustomerName = request.getCustomerName().equals(booking.getCustomerName());
-        boolean isSameCustomerEmail = request.getCustomerEmail().equals(booking.getCustomerEmail());
-        boolean isSameCustomerPhone = request.getCustomerPhone().equals(booking.getCustomerPhone());
+        boolean isSameCustomer = true;
+        
+        if (request.getCustomerID() != null) {
+            boolean isSameCustomerId = request.getCustomerID().equals(booking.getCustomerID());
+            boolean isSameCustomerName = request.getCustomerName().equals(booking.getCustomerName());
+            boolean isSameCustomerEmail = request.getCustomerEmail().equals(booking.getCustomerEmail());
+            boolean isSameCustomerPhone = request.getCustomerPhone().equals(booking.getCustomerPhone());
+            isSameCustomer = isSameCustomerId && isSameCustomerName && isSameCustomerEmail && isSameCustomerPhone;
+        }
 
-        boolean isSameCustomer = isSameCustomerId && isSameCustomerName && isSameCustomerEmail && isSameCustomerPhone;
-        boolean isSameOrder = isSameRoom && isSameRoomType && isSameProperty && isSameCustomer;
+        boolean isSameOrder = isSameRoom && isSameRoomType && isSameProperty && isSameCustomer && isNotPaid;
 
         return isSameOrder;
     }

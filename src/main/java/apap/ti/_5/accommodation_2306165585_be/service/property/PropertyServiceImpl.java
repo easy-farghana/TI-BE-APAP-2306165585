@@ -159,40 +159,41 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public IncomeStatisticsDTO getIncomeStatistics(int month, int year) {
-        List<Property> properties = propertyRepository.findAll()
-            .stream()
-            .filter(p -> p.getActiveStatus() == 1)
-            .toList();
+        // ambil semua property yang aktif
+        List<Property> properties = propertyRepository.findAllActive();
 
-        List<String> propertyNames = new ArrayList<>();
-        List<Integer> propertyIncomes = new ArrayList<>();
+        // buat list propertyStatistics
+        List<IncomeStatisticsDTO.PropertyStatisticDTO> propertyStatistics = new ArrayList<>();
         int totalIncome = 0;
 
         for (Property property : properties) {
             int propertyIncome = 0;
 
+            // iterasi semua roomType -> room -> booking
             for (RoomType roomType : property.getListRoomType()) {
                 for (Room room : roomType.getListRoom()) {
                     for (AccommodationBooking booking : room.getListAccommodationBooking()) {
                         LocalDateTime checkIn = booking.getCheckInDate();
-                        if (checkIn.getMonthValue() == month && checkIn.getYear() == year) {
+                        if (checkIn.getMonthValue() == month && checkIn.getYear() == year && booking.getStatus() == 1) {
                             propertyIncome += booking.getTotalPrice();
                         }
                     }
                 }
             }
+    
+            propertyStatistics.add(
+                new IncomeStatisticsDTO.PropertyStatisticDTO(property.getPropertyName(), propertyIncome)
+            );
 
-            propertyNames.add(property.getPropertyName());
-            propertyIncomes.add(propertyIncome);
             totalIncome += propertyIncome;
         }
 
         return IncomeStatisticsDTO.builder()
-            .propertyNames(propertyNames)
-            .propertyIncomes(propertyIncomes)
+            .propertyStatistics(propertyStatistics)
             .totalIncome(totalIncome)
             .build();
     }
+
     
     @Transactional
     @Override

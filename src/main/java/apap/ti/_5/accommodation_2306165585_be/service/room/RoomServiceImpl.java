@@ -18,8 +18,9 @@ import apap.ti._5.accommodation_2306165585_be.restdto.request.room.AddMaintenanc
 import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
 import apap.ti._5.accommodation_2306165585_be.security.UserContext;
-
+import lombok.extern.slf4j.Slf4j;
 @Service
+@Slf4j
 public class RoomServiceImpl implements RoomService {
     @Autowired
     private RoomRepository roomRepository;
@@ -188,7 +189,6 @@ public class RoomServiceImpl implements RoomService {
             .build();
     }
     
-    
 
     @Override
     public boolean isRoomAvailable(Room room, LocalDateTime checkIn, LocalDateTime checkOut) {
@@ -207,10 +207,11 @@ public class RoomServiceImpl implements RoomService {
         }
 
         return true;
+        
     }
 
     private boolean isDatesOverlap(LocalDateTime start1, LocalDateTime end1, LocalDateTime start2, LocalDateTime end2) {
-        return !(end2.isBefore(start1) || start2.isAfter(end1));
+        return start2.isBefore(end1) && end2.isAfter(start1);
     }
     
 }

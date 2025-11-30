@@ -13,6 +13,10 @@ Created by:
 - Name: Muhammad Hibrizi Farghana
 - NPM: 2306165585
 
+## API DOCS
+
+See api docs: [api.md](docs/api.md)
+
 ## How to run this project locally?
 1. Setup your local database using DBeaver or Docker
 2. Clone this project to your local device 
@@ -26,6 +30,7 @@ Dalam pengerjaan tutorial ini, saya mendapatkan berbagai masalah dengan Gitlab. 
 Berikut ini adalah url untuk repository github TI saya
 
 repo backend-TI : https://github.com/easy-farghana/TI-BE-APAP-2306165585/tree/feat/praktikum-9
+
 repo frontend-TI: https://github.com/easy-farghana/TI-FE-APAP-2306165585/tree/feat/praktikum-9
 
 

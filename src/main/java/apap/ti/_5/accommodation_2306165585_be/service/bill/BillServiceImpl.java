@@ -67,10 +67,9 @@ public class BillServiceImpl implements BillService {
         bill.setDescription(billDTO.getDescription());
         bill.setAmount(billDTO.getAmount());
         bill.setStatus(0);
-        billRepository.save(bill);
-
-        log.info("Saving new bill {}", bill);
-        return mapToBillResponseDTO(bill);
+        Bill savedBill = billRepository.save(bill);
+        log.info("Saving new bill {}", savedBill);
+        return mapToBillResponseDTO(savedBill);
     }
 
     @Override
@@ -236,6 +235,13 @@ public class BillServiceImpl implements BillService {
             throw new IllegalArgumentException("Insufficient balance. Please top up balance.");
         }
         
+        if (bill.getServiceName().equalsIgnoreCase("VehicleRental")) {
+            boolean isDone = externalApiService.checkRentalStatus(bill.getServiceReferenceID());
+            if (!isDone) {
+                throw new IllegalArgumentException("Rental is not done");
+            }
+        }
+
         // Deduct balance via profile service
         externalApiService.deductBalance(userID, userSaldo, paymentAmount);
 
