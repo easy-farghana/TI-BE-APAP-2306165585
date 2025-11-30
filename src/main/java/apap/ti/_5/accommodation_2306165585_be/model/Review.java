@@ -36,6 +36,12 @@ public class Review {
     @Column(name = "customer_id")
     private UUID customerID;
 
+    @Column(name = "property_id")
+    private UUID propertyID;
+
+    @Column(name = "customer_name")
+    private String customerName;
+
     @Column(name = "booking_id")
     private UUID bookingID;
 

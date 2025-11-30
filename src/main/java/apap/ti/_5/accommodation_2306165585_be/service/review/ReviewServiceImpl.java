@@ -62,9 +62,13 @@ public class ReviewServiceImpl implements ReviewService {
             request.getValueRating()
         ) / 4;
 
+        String customerName = userContext.getName();
+        Property property = getPropertyFromReviewId(request.getBookingID());
 
         Review review = Review.builder()
             .customerID(userID)
+            .customerName(customerName)
+            .propertyID(property.getPropertyID())
             .bookingID(request.getBookingID())
             .comment(request.getComment())
             .cleanlinessRating(request.getCleanlinessRating())
@@ -85,7 +89,7 @@ public class ReviewServiceImpl implements ReviewService {
         );
 
         String role = userContext.getRole();
-        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !isOwnerOfProperty(reviewID)) {
+        if (role.equals(RoleGroup.ACCOMMODATION_OWNER) && !isOwnerOfProperty(review)) {
             throw new SecurityException("You are not authorized to access this review");
         }
 
@@ -125,7 +129,16 @@ public class ReviewServiceImpl implements ReviewService {
             .toList();
     }
 
-    private Property getPropertyFromReview(UUID reviewID) {
+    @Override
+    public List<ReviewResponseDTO> getAllReviewsByCustomer() {
+        UUID userID = userContext.getUserID();
+        List<Review> listOfReviews = reviewRepository.findAllByCustomerID(userID);
+        return listOfReviews.stream()
+            .map(this::mapToReviewResponseDTO)
+            .toList();
+    }
+
+    private Property getPropertyFromReviewId(UUID reviewID) {
         AccommodationBooking booking = bookingRepository.findById(reviewID).orElseThrow(
             () -> new NotFoundException("Booking not found with ID: " + reviewID)
         );
@@ -136,15 +149,27 @@ public class ReviewServiceImpl implements ReviewService {
         return property;
     }
 
-    private boolean isOwnerOfProperty(UUID reviewID) {
-        Property property = getPropertyFromReview(reviewID);
+    private Property getPropertyFromReview(Review review) {
+        Property property = propertyRepository.findById(review.getPropertyID()).orElseThrow(
+            () -> new NotFoundException("Booking not found with ID: " + review.getPropertyID())
+        );
+
+        return property;
+    }
+
+    private boolean isOwnerOfProperty(Review review) {
+        Property property = getPropertyFromReview(review);
         return property.getOwnerID().equals(userContext.getUserID());
     }
     
     private ReviewResponseDTO mapToReviewResponseDTO(Review review) {
+        String propertyName = getPropertyFromReview(review).getPropertyName();
+
         return ReviewResponseDTO.builder()
             .reviewID(review.getReviewID())
-            .customerID(review.getCustomerID())   
+            .customerID(review.getCustomerID())
+            .customerName(review.getCustomerName())
+            .propertyName(propertyName)   
             .bookingID(review.getBookingID())
             .comment(review.getComment())
             .cleanlinessRating(review.getCleanlinessRating())

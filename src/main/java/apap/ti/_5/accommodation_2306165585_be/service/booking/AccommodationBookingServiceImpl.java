@@ -289,7 +289,7 @@ public class AccommodationBookingServiceImpl implements AccommodationBookingServ
         booking.setTotalPrice(newTotalPrice);
         booking.setCapacity(request.getCapacity());
         booking.setBreakfast(request.getIsBreakfast());
-        booking.setCustomerID(request.getCustomerID());
+        booking.setCustomerID(userID);
         booking.setCustomerName(request.getCustomerName());
         booking.setCustomerEmail(request.getCustomerEmail());
         booking.setCustomerPhone(request.getCustomerPhone());

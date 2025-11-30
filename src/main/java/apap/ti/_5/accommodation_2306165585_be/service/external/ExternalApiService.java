@@ -260,7 +260,7 @@ public class ExternalApiService {
         HttpEntity<BillRequestDTO> entity = new HttpEntity<>(createHeaders(false));
 
         try {
-            restTemplate.put(
+            restTemplate.exchange(
                 url, 
                 HttpMethod.POST, 
                 entity,
