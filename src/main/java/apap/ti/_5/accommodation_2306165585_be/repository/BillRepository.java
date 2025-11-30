@@ -3,6 +3,7 @@ package apap.ti._5.accommodation_2306165585_be.repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,16 +23,16 @@ public interface BillRepository extends JpaRepository<Bill, UUID>{
             @Param("status") Integer status
     );
 
-     @Query("""
-        SELECT b FROM Bill b
-        WHERE b.customerID = :customerID
-        AND (:status IS NULL OR b.status = :status)
-        ORDER BY
-            CASE WHEN :sortBy = 'createdAt' AND :sortDir = 'asc' THEN b.createdAt END ASC,
-            CASE WHEN :sortBy = 'createdAt' AND :sortDir = 'desc' THEN b.createdAt END DESC,
-            CASE WHEN :sortBy = 'serviceName' AND :sortDir = 'asc' THEN b.serviceName END ASC,
-            CASE WHEN :sortBy = 'serviceName' AND :sortDir = 'desc' THEN b.serviceName END DESC
-    """)
+    @Query("""
+		SELECT b FROM Bill b
+		WHERE b.customerID = :customerID
+		AND (:status IS NULL OR b.status = :status)
+		ORDER BY
+				CASE WHEN :sortBy = 'createdAt' AND :sortDir = 'asc' THEN b.createdAt END ASC,
+				CASE WHEN :sortBy = 'createdAt' AND :sortDir = 'desc' THEN b.createdAt END DESC,
+				CASE WHEN :sortBy = 'amount' AND :sortDir = 'asc' THEN b.amount END ASC,
+				CASE WHEN :sortBy = 'amount' AND :sortDir = 'desc' THEN b.amount END DESC
+	""")
     List<Bill> findAllWithFiltersForCustomers(
             @Param("customerID") UUID customerID,
             @Param("status") Integer status,

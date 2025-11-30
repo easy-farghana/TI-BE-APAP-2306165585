@@ -11,16 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import apap.ti._5.accommodation_2306165585_be.exception.NotFoundException;
+import apap.ti._5.accommodation_2306165585_be.exception.SecurityException;
 import apap.ti._5.accommodation_2306165585_be.model.Bill;
 import apap.ti._5.accommodation_2306165585_be.repository.BillRepository;
+import apap.ti._5.accommodation_2306165585_be.restdto.external.response.UserInfoResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.BillRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.bill.BillResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
 import apap.ti._5.accommodation_2306165585_be.security.UserContext;
 import apap.ti._5.accommodation_2306165585_be.service.external.ExternalApiService;
-import apap.ti._5.accommodation_2306165585_be.restdto.external.response.UserInfoResponseDTO;
-import apap.ti._5.accommodation_2306165585_be.exception.SecurityException;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -228,7 +227,7 @@ public class BillServiceImpl implements BillService {
         // Call loyalty service (MOCK)
         if (couponCode != null && !couponCode.isEmpty()) {
             int discount = externalApiService.calculateDiscount(couponCode, userID);
-            paymentAmount = (long) (paymentAmount * ((1 - discount) / 100));
+            paymentAmount = paymentAmount * (100 - discount) / 100;
             bill.setAmount(paymentAmount);
         }
 

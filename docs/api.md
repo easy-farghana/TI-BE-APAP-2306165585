@@ -544,3 +544,522 @@ Response:
   "data": { ...updated property detail... }
 }
 ```
+
+## Accommodation Service - Review 
+
+Before sending a request, make sure request includes a JWT Token 
+
+For RBAC Details, see //Review endpoints in:
+[WebSecurityConfig.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/security/WebSecurityConfig.java)
+
+Role details: [RoleGroup.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/security/RoleGroup.java)
+
+See: [ReviewController.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/restcontroller/ReviewController.java)
+
+### 1. [POST] CREATE REVIEW
+
+Send a request: `/api/review/create`
+
+Request body:
+```json
+{
+    "bookingID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+    "comment": "Hotel bersih dan pelayanan ramah",
+    "cleanlinessRating": 5,
+    "facilityRating": 4,
+    "serviceRating": 5,
+    "valueRating": 4
+}
+```
+
+See: [ReviewRequestDTO.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/restdto/request/review/ReviewRequestDTO.java)
+
+Response:
+
+// success
+{
+    "status": 201,
+    "message": "Review created successfully",
+    "timestamp": "2025-12-01T10:00:00.000+07:00",
+    "data": {
+        "reviewID": "1a2b3c4d-5678-90ab-cdef-1234567890ab",
+        "customerID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+        "customerName": "Muhammad Hibrizi",
+        "propertyName": "Suatu Hotel",
+        "bookingID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+        "comment": "Hotel bersih dan pelayanan ramah",
+        "cleanlinessRating": 5,
+        "facilityRating": 4,
+        "serviceRating": 5,
+        "valueRating": 4,
+        "overallRating": 4,
+        "createdAt": "2025-12-01T10:00:00.000+07:00"
+    }
+}
+
+### 2. [GET] GET REVIEW BY ID
+
+Request: `/api/review/{reviewID}`
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "Review fetched successfully",
+    "timestamp": "2025-12-01T10:05:00.000+07:00",
+    "data": {
+        "reviewID": "1a2b3c4d-5678-90ab-cdef-1234567890ab",
+        "customerID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+        "customerName": "Muhammad Hibrizi",
+        "propertyName": "Suatu Hotel",
+        "bookingID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+        "comment": "Hotel bersih dan pelayanan ramah",
+        "cleanlinessRating": 5,
+        "facilityRating": 4,
+        "serviceRating": 5,
+        "valueRating": 4,
+        "overallRating": 4,
+        "createdAt": "2025-12-01T10:00:00.000+07:00"
+    }
+}
+```
+
+### 3. [GET] GET ALL REVIEWS BY PROPERTY
+
+Request: `/api/review/property/{propertyID}`
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "Reviews for property fetched successfully",
+    "timestamp": "2025-12-01T10:10:00.000+07:00",
+    "data": [
+        {
+            "reviewID": "1a2b3c4d-5678-90ab-cdef-1234567890ab",
+            "customerID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+            "customerName": "Muhammad Hibrizi",
+            "propertyName": "Suatu Hotel",
+            "bookingID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+            "comment": "Hotel bersih dan pelayanan ramah",
+            "cleanlinessRating": 5,
+            "facilityRating": 4,
+            "serviceRating": 5,
+            "valueRating": 4,
+            "overallRating": 4,
+            "createdAt": "2025-12-01T10:00:00.000+07:00"
+        }
+    ]
+}
+```
+
+### 4. [GET] GET ALL REVIEWS BY CUSTOMER
+
+Request: `/api/review/customer`
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "Reviews for customer fetched successfully",
+    "timestamp": "2025-12-01T10:15:00.000+07:00",
+    "data": [
+        {
+            "reviewID": "1a2b3c4d-5678-90ab-cdef-1234567890ab",
+            "customerID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+            "customerName": "Muhammad Hibrizi",
+            "propertyName": "Suatu Hotel",
+            "bookingID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+            "comment": "Hotel bersih dan pelayanan ramah",
+            "cleanlinessRating": 5,
+            "facilityRating": 4,
+            "serviceRating": 5,
+            "valueRating": 4,
+            "overallRating": 4,
+            "createdAt": "2025-12-01T10:00:00.000+07:00"
+        }
+    ]
+}
+```
+
+### 5. [GET] GET ALL REVIEWS BY CUSTOMER ID
+
+Request: `/api/review/customer/{customerID}`
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "Reviews for customer fetched successfully",
+    "timestamp": "2025-12-01T10:20:00.000+07:00",
+    "data": [
+        {
+            "reviewID": "1a2b3c4d-5678-90ab-cdef-1234567890ab",
+            "customerID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+            "customerName": "Muhammad Hibrizi",
+            "propertyName": "Suatu Hotel",
+            "bookingID": "0d94db1b-6e90-4a10-bf2d-70113fc2102d",
+            "comment": "Hotel bersih dan pelayanan ramah",
+            "cleanlinessRating": 5,
+            "facilityRating": 4,
+            "serviceRating": 5,
+            "valueRating": 4,
+            "overallRating": 4,
+            "createdAt": "2025-12-01T10:00:00.000+07:00"
+        }
+    ]
+}
+```
+
+
+## Accommodation Service - Room and RoomType
+
+Before sending a request, make sure request includes a JWT Token 
+
+For RBAC Details, see //Room and //Room Type endpoints in:
+[WebSecurityConfig.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/security/WebSecurityConfig.java)
+
+Role details: [RoleGroup.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/security/RoleGroup.java)
+
+See: [RoomGlobalController.java](../src/main/java/apap/ti/_5/accommodation_2306165585_be/restcontroller/RoomGlobalController.java)
+
+### Room Type Endpoints
+
+### 1. [GET] GET ALL ROOM TYPES
+
+Request: `/api/room-type`
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "List of all room types fetched successfully",
+    "timestamp": "2025-12-01T10:00:00.000+07:00",
+    "data": [
+        {
+            "roomTypeID": "uuid",
+            "name": "Double Room",
+            "price": 500000,
+            "description": "Kamar nyaman dengan fasilitas modern",
+            "capacity": 2,
+            "facility": "WiFi, AC, TV",
+            "floor": 2,
+            "listRoom": [
+                {
+                    "roomID": "uuid",
+                    "name": "201",
+                    "availabilityStatus": 1
+                }
+            ]
+        }
+    ]
+}
+```
+
+### 2. [GET] GET ROOM TYPES BY PROPERTY
+
+Request: `/api/room-type/property/{propertyId}`
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "List of all room types with property id {propertyId} fetched successfully",
+    "timestamp": "2025-12-01T10:05:00.000+07:00",
+    "data": [
+        {
+            "roomTypeID": "uuid",
+            "name": "Double Room",
+            "price": 500000,
+            "description": "Kamar nyaman dengan fasilitas modern",
+            "capacity": 2,
+            "facility": "WiFi, AC, TV",
+            "floor": 2,
+            "listRoom": [
+                {
+                    "roomID": "uuid",
+                    "name": "201",
+                    "availabilityStatus": 1
+                }
+            ]
+        }
+    ]
+}
+```
+
+### 3. [GET] GET ROOM TYPE DETAILS
+
+Request: `/api/room-type/{roomTypeId}`
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "Room type details id {roomTypeId} fetched successfully",
+    "timestamp": "2025-12-01T10:10:00.000+07:00",
+    "data": {
+        "roomTypeID": "uuid",
+        "name": "Double Room",
+        "price": 500000,
+        "description": "Kamar nyaman dengan fasilitas modern",
+        "capacity": 2,
+        "facility": "WiFi, AC, TV",
+        "floor": 2,
+        "listRoom": [
+            {
+                "roomID": "uuid",
+                "name": "201",
+                "availabilityStatus": 1
+            }
+        ]
+    }
+}
+``` 
+
+### 4. [POST] CREATE ROOM TYPE
+
+Request: `/api/room-type/create`
+
+Request body:
+```json
+{
+    "propertyID": "uuid",
+    "name": "Double Room",
+    "facility": "WiFi, AC, TV",
+    "price": 500000,
+    "description": "Kamar nyaman dengan fasilitas modern",
+    "floor": 2,
+    "capacity": 2,
+    "unit": 5
+}
+```
+
+See: AddSingularRoomTypeDTO.java
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "Room type created succesfully",
+    "timestamp": "2025-12-01T10:15:00.000+07:00",
+    "data": {
+        "roomTypeID": "uuid",
+        "name": "Double Room",
+        "price": 500000,
+        "description": "Kamar nyaman dengan fasilitas modern",
+        "capacity": 2,
+        "facility": "WiFi, AC, TV",
+        "floor": 2,
+        "listRoom": [
+            {
+                "roomID": "uuid",
+                "name": "201",
+                "availabilityStatus": 1
+            }
+        ]
+    }
+}
+```
+### Room Endpoints
+
+## 1. [GET] GET ALL ROOMS
+
+Request: `/api/room`
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "List of all rooms fetched successfully",
+    "timestamp": "2025-12-01T10:20:00.000+07:00",
+    "data": [
+        {
+            "roomID": "uuid",
+            "name": "201",
+            "availabilityStatus": 1
+        },
+        {
+            "roomID": "uuid",
+            "name": "202",
+            "availabilityStatus": 0
+        }
+    ]
+}
+```
+
+## Accommodation Service - Booking 
+
+Before sending a request, make sure the request includes a JWT Token
+
+For RBAC details, see //Booking endpoints in:
+WebSecurityConfig.java
+
+Role details: RoleGroup.java
+
+See: AccommodationBookingController.java
+
+### 1. [GET] GET ALL BOOKINGS
+
+Request: `/api/booking`
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "List of all accommodation bookings fetched successfully",
+    "timestamp": "2025-12-01T10:00:00.000+07:00",
+    "data": [
+        {
+            "bookingID": "uuid-1234",
+            "propertyName": "Suatu Hotel",
+            "checkInDate": "2025-12-01T14:00:00",
+            "checkOutDate": "2025-12-05T12:00:00",
+            "totalPrice": 2000000,
+            "status": 1,
+            "roomName": "DoubleRoom"
+        }
+    ]
+}
+```
+
+See: AllBookingResponseDTO.java
+
+### 2. [GET] GET BOOKING BY ID
+
+Request: `/api/booking/{bookingID}`
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "Accommodation booking fetched successfully",
+    "timestamp": "2025-12-01T10:05:00.000+07:00",
+    "data": {
+        "bookingID": "uuid-1234",
+        "checkInDate": "2025-12-01T14:00:00",
+        "checkOutDate": "2025-12-05T12:00:00",
+        "totalDays": 4,
+        "totalPrice": 2000000,
+        "status": 1,
+        "customerID": "uuid-cust",
+        "customerName": "John Doe",
+        "customerEmail": "john@example.com",
+        "customerPhone": "08123456789",
+        "breakfast": true,
+        "capacity": 2,
+        "roomName": "DoubleRoom",
+        "roomID": "uuid-room",
+        "roomTypeID": "uuid-roomtype",
+        "propertyID": "uuid-property",
+        "propertyName": "Suatu Hotel",
+        "createdDate": "2025-12-01T09:00:00",
+        "updatedDate": "2025-12-01T09:00:00"
+    }
+}
+```
+
+See: AccommodationBookingResponseDTO.java
+
+### 3. [POST] CREATE BOOKING
+
+Request: `/api/booking/create`
+
+Request body:
+```json
+{
+    "propertyID": "uuid-property",
+    "roomID": "uuid-room",
+    "customerID": "uuid-cust",
+    "checkInDate": "2025-12-01T14:00:00",
+    "checkOutDate": "2025-12-05T12:00:00",
+    "isBreakfast": true
+}
+```
+
+Response:
+```json
+{
+    "status": 201,
+    "message": "Accommodation booking created successfully",
+    "timestamp": "2025-12-01T10:10:00.000+07:00",
+    "data": { ...AccommodationBookingResponseDTO... }
+}
+```
+### 4. [PUT] UPDATE BOOKING
+
+Request: `/api/booking/update/{bookingID}`
+
+Request body:
+```json
+{
+    "propertyID": "uuid-property",
+    "roomID": "uuid-room",
+    "customerID": "uuid-cust",
+    "checkInDate": "2025-12-02T14:00:00",
+    "checkOutDate": "2025-12-06T12:00:00",
+    "isBreakfast": false
+}
+```
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "Accommodation booking updated successfully",
+    "timestamp": "2025-12-01T10:15:00.000+07:00",
+    "data": { ...AccommodationBookingResponseDTO... }
+}
+```
+### 5. [PUT] UPDATE BOOKING STATUS
+
+Request: `/api/booking/update/status/{bookingID}`
+
+Response:
+```json
+{
+    "status": 201,
+    "message": "Accommodation booking status updated successfully",
+    "timestamp": "2025-12-01T10:20:00.000+07:00",
+    "data": { ...AccommodationBookingResponseDTO... }
+}
+```
+6. [POST] CANCEL BOOKING
+
+Request: `/api/booking/cancel/{bookingID}`
+
+Response:
+```json
+{
+    "status": 201,
+    "message": "Accommodation booking cancelled successfully",
+    "timestamp": "2025-12-01T10:25:00.000+07:00",
+    "data": { ...AccommodationBookingResponseDTO... }
+}
+```
+### 7. [GET] INCOME STATISTICS
+
+Request: `/api/booking/chart?month={month}&year={year}`
+
+Query parameters (optional):
+
+month: target month
+
+year: target year
+
+Response:
+```json
+{
+    "status": 200,
+    "message": "Income statistics for 12/2025 fetched successfully",
+    "timestamp": "2025-12-01T10:30:00.000+07:00",
+    "data": {
+        "propertyStatistics": [
+            { "propertyName": "Suatu Hotel", "propertyIncomes": 2000000 },
+            { "propertyName": "Hotel Lain", "propertyIncomes": 3500000 }
+        ],
+        "totalIncome": 5500000
+    }
+}
+```
+
+See: IncomeStatisticsDTO.java
