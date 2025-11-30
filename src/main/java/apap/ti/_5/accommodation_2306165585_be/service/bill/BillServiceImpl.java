@@ -224,12 +224,13 @@ public class BillServiceImpl implements BillService {
         // Adjust bill amount if coupon is provided
         long paymentAmount = bill.getAmount();
         long userSaldo = userInfo.getSaldo();
-        // TODO: call loyalty service
         
-        // if (couponCode != null && !couponCode.isEmpty()) {
-        //     double discount = externalApiService.calculateDiscount(couponCode, bill);
-        //     finalAmount -= discount;
-        // }
+        // Call loyalty service (MOCK)
+        if (couponCode != null && !couponCode.isEmpty()) {
+            int discount = externalApiService.calculateDiscount(couponCode, userID);
+            paymentAmount = (long) (paymentAmount * ((1 - discount) / 100));
+            bill.setAmount(paymentAmount);
+        }
 
         if (userSaldo < paymentAmount) {
             throw new IllegalArgumentException("Insufficient balance. Please top up balance.");
