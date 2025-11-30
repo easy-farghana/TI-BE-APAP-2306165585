@@ -56,7 +56,7 @@ public class ReviewController {
     }
 
     @GetMapping(VIEW_REVIEW_DETAILS)
-    public ResponseEntity<BaseResponseDTO<ReviewResponseDTO>> getReviewByID(@PathVariable UUID reviewID) {
+    public ResponseEntity<BaseResponseDTO<ReviewResponseDTO>> getReviewByID(@PathVariable("reviewID") UUID reviewID) {
 
         ReviewResponseDTO review = reviewService.getReviewByReviewID(reviewID);
 
@@ -69,7 +69,7 @@ public class ReviewController {
 
     @GetMapping(VIEW_REVIEW_BY_PROPERTY)
     public ResponseEntity<BaseResponseDTO<List<ReviewResponseDTO>>> getReviewsByProperty(
-        @PathVariable UUID propertyID
+        @PathVariable("propertyID") UUID propertyID
     ) {
 
         List<ReviewResponseDTO> reviews = reviewService.getAllReviewsByPropertyID(propertyID);
@@ -84,7 +84,7 @@ public class ReviewController {
 
     @GetMapping(VIEW_REVIEW_BY_CUSTOMER_ID)
     public ResponseEntity<BaseResponseDTO<List<ReviewResponseDTO>>> getReviewsByCustomerID(
-        @PathVariable UUID customerID
+        @PathVariable("customerID") UUID customerID
     ) {
 
         List<ReviewResponseDTO> reviews = reviewService.getAllReviewsByCustomerID(customerID);

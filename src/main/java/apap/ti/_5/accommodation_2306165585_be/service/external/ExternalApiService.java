@@ -287,7 +287,7 @@ public class ExternalApiService {
         HttpEntity<?> entity = new HttpEntity<>(body, createHeaders(false));
 
         try {
-            restTemplate.put(
+            restTemplate.exchange(
                 url, 
                 HttpMethod.PUT, 
                 entity,

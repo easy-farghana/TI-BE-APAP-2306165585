@@ -43,7 +43,7 @@ public class RoomGlobalController {
     PropertyRepository propertyRepository;
 
     public static final String BASE_URL_TYPE = "/room-type";
-    public static final String VIEW_TYPES_BY_PROPERTY = BASE_URL_TYPE + "//property/{propertyId}";
+    public static final String VIEW_TYPES_BY_PROPERTY = BASE_URL_TYPE + "/property/{propertyId}";
     public static final String VIEW_TYPE = BASE_URL_TYPE + "/{roomTypeId}";
     public static final String CREATE_TYPE = BASE_URL_TYPE + "/create";
 
@@ -61,7 +61,7 @@ public class RoomGlobalController {
     }
 
     @GetMapping(VIEW_TYPES_BY_PROPERTY)
-    public ResponseEntity<BaseResponseDTO<List<RoomTypeResponseDTO>>> getRoomTypesByPropertyId(@PathVariable UUID propertyId) {
+    public ResponseEntity<BaseResponseDTO<List<RoomTypeResponseDTO>>> getRoomTypesByPropertyId(@PathVariable("propertyId") UUID propertyId) {
         Property property = propertyRepository.findById(propertyId).orElseThrow(
             () -> new IllegalArgumentException("Property not found with ID: " + propertyId)
         );
@@ -75,7 +75,7 @@ public class RoomGlobalController {
     }
 
     @GetMapping(VIEW_TYPE)
-    public ResponseEntity<BaseResponseDTO<RoomTypeResponseDTO>> getRoomType(@PathVariable UUID roomTypeId) {
+    public ResponseEntity<BaseResponseDTO<RoomTypeResponseDTO>> getRoomType(@PathVariable("roomTypeId") UUID roomTypeId) {
 
         RoomTypeResponseDTO roomType = roomTypeService.getRoomTypeById(roomTypeId);
         return responseUtil.success(

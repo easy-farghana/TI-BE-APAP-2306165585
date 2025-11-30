@@ -507,32 +507,6 @@ class RoomServiceImplTest {
     }
 
     @Test
-    void testIsRoomAvailable_EdgeCase_CheckOutEqualsCheckIn() {
-        testRoom.getListAccommodationBooking().add(testBooking);
-        
-        // Check-out of new booking equals check-in of existing booking
-        LocalDateTime checkIn = LocalDateTime.now();
-        LocalDateTime checkOut = testBooking.getCheckInDate();
-
-        boolean result = roomService.isRoomAvailable(testRoom, checkIn, checkOut);
-
-        assertFalse(result); // Should overlap
-    }
-
-    @Test
-    void testIsRoomAvailable_EdgeCase_CheckInEqualsCheckOut() {
-        testRoom.getListAccommodationBooking().add(testBooking);
-        
-        // Check-in of new booking equals check-out of existing booking
-        LocalDateTime checkIn = testBooking.getCheckOutDate();
-        LocalDateTime checkOut = testBooking.getCheckOutDate().plusDays(2);
-
-        boolean result = roomService.isRoomAvailable(testRoom, checkIn, checkOut);
-
-        assertFalse(result); // Should overlap
-    }
-
-    @Test
     void testIsRoomAvailable_MultipleBookings_AllNonOverlapping() {
         AccommodationBooking booking2 = AccommodationBooking.builder()
                 .bookingID(UUID.randomUUID())

@@ -1,23 +1,7 @@
 package apap.ti._5.accommodation_2306165585_be.service.review;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import apap.ti._5.accommodation_2306165585_be.exception.NotFoundException;
+import apap.ti._5.accommodation_2306165585_be.exception.SecurityException;
 import apap.ti._5.accommodation_2306165585_be.model.AccommodationBooking;
 import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.model.Review;
@@ -30,6 +14,19 @@ import apap.ti._5.accommodation_2306165585_be.restdto.request.review.ReviewReque
 import apap.ti._5.accommodation_2306165585_be.restdto.response.review.ReviewResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
 import apap.ti._5.accommodation_2306165585_be.security.UserContext;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceImplTest {
@@ -49,371 +46,336 @@ class ReviewServiceImplTest {
     @InjectMocks
     private ReviewServiceImpl reviewService;
 
-    private UUID userId;
-    private UUID otherUserId;
+    private UUID customerId;
+    private UUID ownerId;
+    private UUID propertyId;
     private UUID bookingId;
     private UUID reviewId;
-    private UUID propertyId;
-    private UUID ownerId;
-    private UUID roomId;
     private UUID roomTypeId;
-    
-    private ReviewRequestDTO reviewRequest;
-    private Review review;
-    private AccommodationBooking booking;
-    private Property property;
-    private Room room;
-    private RoomType roomType;
+    private UUID roomId;
+
+    private Review testReview;
+    private AccommodationBooking testBooking;
+    private Property testProperty;
+    private RoomType testRoomType;
+    private Room testRoom;
+    private ReviewRequestDTO testRequest;
 
     @BeforeEach
     void setUp() {
-        userId = UUID.randomUUID();
-        otherUserId = UUID.randomUUID();
+        customerId = UUID.randomUUID();
+        ownerId = UUID.randomUUID();
+        propertyId = UUID.randomUUID();
         bookingId = UUID.randomUUID();
         reviewId = UUID.randomUUID();
-        propertyId = UUID.randomUUID();
-        ownerId = UUID.randomUUID();
-        roomId = UUID.randomUUID();
         roomTypeId = UUID.randomUUID();
+        roomId = UUID.randomUUID();
 
-        // Setup property
-        property = new Property();
-        property.setPropertyID(propertyId);
-        property.setOwnerID(ownerId);
+        // Setup Property
+        testProperty = Property.builder()
+                .propertyID(propertyId)
+                .propertyName("Test Hotel")
+                .ownerID(ownerId)
+                .ownerName("Test Owner")
+                .type(1)
+                .province(1)
+                .address("Test Address")
+                .description("Test Description")
+                .activeStatus(1)
+                .listRoomType(new ArrayList<>())
+                .build();
 
-        // Setup room type
-        roomType = RoomType.builder()
+        // Setup RoomType
+        testRoomType = RoomType.builder()
                 .roomTypeID(roomTypeId)
-                .property(property)
+                .name("Deluxe")
+                .floor(1)
+                .capacity(2)
+                .price(100000)
+                .property(testProperty)
+                .listRoom(new ArrayList<>())
                 .build();
 
-        // Setup room
-        room = Room.builder()
+        // Setup Room
+        testRoom = Room.builder()
                 .roomID(roomId)
-                .roomType(roomType)
+                .roomType(testRoomType)
+                .availabilityStatus(1)
+                .listAccommodationBooking(new ArrayList<>())
                 .build();
 
-        // Setup booking
-        booking = AccommodationBooking.builder()
+        // Setup Booking (completed)
+        testBooking = AccommodationBooking.builder()
                 .bookingID(bookingId)
-                .customerID(userId)
-                .room(room)
-                .status(1) // Completed status
-                .checkOutDate(LocalDateTime.now().minusDays(1)) // Checked out yesterday
+                .customerID(customerId)
+                .checkInDate(LocalDateTime.now().minusDays(5))
+                .checkOutDate(LocalDateTime.now().minusDays(2))
+                .totalPrice(500000)
+                .status(1)
+                .room(testRoom)
                 .build();
 
-        // Setup review request
-        reviewRequest = new ReviewRequestDTO();
-        reviewRequest.setBookingID(bookingId);
-        reviewRequest.setComment("Great experience!");
-        reviewRequest.setCleanlinessRating(5);
-        reviewRequest.setFacilityRating(4);
-        reviewRequest.setServiceRating(5);
-        reviewRequest.setValueRating(4);
-
-        // Setup review
-        review = Review.builder()
+        // Setup Review
+        testReview = Review.builder()
                 .reviewID(reviewId)
-                .customerID(userId)
+                .customerID(customerId)
+                .customerName("Test Customer")
+                .propertyID(propertyId)
                 .bookingID(bookingId)
-                .comment("Great experience!")
+                .comment("Great stay!")
                 .cleanlinessRating(5)
                 .facilityRating(4)
                 .serviceRating(5)
                 .valueRating(4)
-                .overallRating(4) // (5+4+5+4)/4 = 4.5 -> 4 (integer division)
+                .overallRating(4)
                 .createdAt(LocalDateTime.now())
                 .build();
+
+        // Setup Request
+        testRequest = new ReviewRequestDTO();
+        testRequest.setBookingID(bookingId);
+        testRequest.setComment("Great stay!");
+        testRequest.setCleanlinessRating(5);
+        testRequest.setFacilityRating(4);
+        testRequest.setServiceRating(5);
+        testRequest.setValueRating(4);
+    }
+
+    // Test createReview - Success
+@Test
+    void testCreateReview_Success() {
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(userContext.getName()).thenReturn("Test Customer");
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(testBooking));
+        
+        // Need to mock propertyRepository.findById twice:
+        // 1st call: in getPropertyFromReviewId() -> returns property for creating review
+        // 2nd call: in mapToReviewResponseDTO() -> getPropertyFromReview() -> returns property for response
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        
+        // When save is called, return the testReview with all fields populated
+        when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> {
+            Review savedReview = invocation.getArgument(0);
+            // Copy the saved review but with an ID
+            return Review.builder()
+                    .reviewID(reviewId)
+                    .customerID(savedReview.getCustomerID())
+                    .customerName(savedReview.getCustomerName())
+                    .propertyID(savedReview.getPropertyID())
+                    .bookingID(savedReview.getBookingID())
+                    .comment(savedReview.getComment())
+                    .cleanlinessRating(savedReview.getCleanlinessRating())
+                    .facilityRating(savedReview.getFacilityRating())
+                    .serviceRating(savedReview.getServiceRating())
+                    .valueRating(savedReview.getValueRating())
+                    .overallRating(savedReview.getOverallRating())
+                    .createdAt(LocalDateTime.now())
+                    .build();
+        });
+
+        ReviewResponseDTO result = reviewService.createReview(testRequest);
+
+        assertNotNull(result);
+        assertEquals(reviewId, result.getReviewID());
+        assertEquals(customerId, result.getCustomerID());
+        assertEquals("Test Customer", result.getCustomerName());
+        assertEquals("Test Hotel", result.getPropertyName());
+        assertEquals(4, result.getOverallRating());
+
+        verify(reviewRepository).save(any(Review.class));
+        verify(propertyRepository).findById(propertyId);
     }
 
     @Test
-    void testCreateReview_Success() {
-        // Arrange
-        when(userContext.getUserID()).thenReturn(userId);
-        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
-        when(reviewRepository.save(any(Review.class))).thenAnswer(i -> {
-            Review savedReview = i.getArgument(0);
-            savedReview.setReviewID(reviewId);
-            savedReview.setCreatedAt(LocalDateTime.now());
-            return savedReview;
-        });
+    void testCreateReview_CorrectOverallRatingCalculation() {
+        testRequest.setCleanlinessRating(5);
+        testRequest.setFacilityRating(5);
+        testRequest.setServiceRating(4);
+        testRequest.setValueRating(2);
+        // Expected: (5 + 5 + 4 + 2) / 4 = 4
 
-        // Act
-        ReviewResponseDTO result = reviewService.createReview(reviewRequest);
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(userContext.getName()).thenReturn("Test Customer");
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(testBooking));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        
+        Review savedReview = Review.builder()
+                .reviewID(reviewId)
+                .customerID(customerId)
+                .customerName("Test Customer")
+                .propertyID(propertyId)
+                .bookingID(bookingId)
+                .comment("Great stay!")
+                .cleanlinessRating(5)
+                .facilityRating(5)
+                .serviceRating(4)
+                .valueRating(2)
+                .overallRating(4)
+                .createdAt(LocalDateTime.now())
+                .build();
+        
+        when(reviewRepository.save(any(Review.class))).thenReturn(savedReview);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(userId, result.getCustomerID());
-        assertEquals(bookingId, result.getBookingID());
-        assertEquals("Great experience!", result.getComment());
-        assertEquals(5, result.getCleanlinessRating());
-        assertEquals(4, result.getFacilityRating());
-        assertEquals(5, result.getServiceRating());
-        assertEquals(4, result.getValueRating());
-        assertEquals(4, result.getOverallRating()); // (5+4+5+4)/4 = 4
-        verify(reviewRepository, times(1)).save(any(Review.class));
+        ReviewResponseDTO result = reviewService.createReview(testRequest);
+
+        assertEquals(4, result.getOverallRating());
     }
 
+    // Test createReview - Booking Not Found
     @Test
     void testCreateReview_BookingNotFound() {
-        // Arrange
-        when(userContext.getUserID()).thenReturn(userId);
+        when(userContext.getUserID()).thenReturn(customerId);
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(NotFoundException.class, 
-                () -> reviewService.createReview(reviewRequest));
-        verify(reviewRepository, never()).save(any(Review.class));
+        assertThrows(NotFoundException.class, () -> reviewService.createReview(testRequest));
+        verify(reviewRepository, never()).save(any());
     }
 
+    // Test createReview - Unauthorized User
     @Test
     void testCreateReview_UnauthorizedUser() {
-        // Arrange
-        when(userContext.getUserID()).thenReturn(otherUserId);
-        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
-
-        // Act & Assert
-        assertThrows(SecurityException.class, 
-                () -> reviewService.createReview(reviewRequest));
-        verify(reviewRepository, never()).save(any(Review.class));
-    }
-
-    @Test
-    void testCreateReview_BookingNotCompleted_StatusNotOne() {
-        // Arrange
-        booking.setStatus(0); // Not completed
-        when(userContext.getUserID()).thenReturn(userId);
-        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, 
-                () -> reviewService.createReview(reviewRequest));
-        verify(reviewRepository, never()).save(any(Review.class));
-    }
-
-    @Test
-    void testCreateReview_BookingNotCompleted_CheckOutDateInFuture() {
-        // Arrange
-        booking.setStatus(1);
-        booking.setCheckOutDate(LocalDateTime.now().plusDays(1)); // Future checkout
-        when(userContext.getUserID()).thenReturn(userId);
-        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, 
-                () -> reviewService.createReview(reviewRequest));
-        verify(reviewRepository, never()).save(any(Review.class));
-    }
-
-    @Test
-    void testCreateReview_OverallRatingCalculation() {
-        // Arrange
-        reviewRequest.setCleanlinessRating(5);
-        reviewRequest.setFacilityRating(5);
-        reviewRequest.setServiceRating(5);
-        reviewRequest.setValueRating(5);
+        UUID otherUserId = UUID.randomUUID();
         
-        when(userContext.getUserID()).thenReturn(userId);
-        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
-        when(reviewRepository.save(any(Review.class))).thenAnswer(i -> {
-            Review savedReview = i.getArgument(0);
-            savedReview.setReviewID(reviewId);
-            return savedReview;
-        });
+        when(userContext.getUserID()).thenReturn(otherUserId);
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(testBooking));
 
-        // Act
-        ReviewResponseDTO result = reviewService.createReview(reviewRequest);
-
-        // Assert
-        assertEquals(5, result.getOverallRating()); // (5+5+5+5)/4 = 5
+        assertThrows(SecurityException.class, () -> reviewService.createReview(testRequest));
+        verify(reviewRepository, never()).save(any());
     }
 
+    // Test createReview - Booking Not Completed (future checkout)
+    @Test
+    void testCreateReview_BookingNotCompleted_FutureCheckout() {
+        testBooking.setCheckOutDate(LocalDateTime.now().plusDays(2));
+        
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(testBooking));
+
+        assertThrows(IllegalArgumentException.class, () -> reviewService.createReview(testRequest));
+        verify(reviewRepository, never()).save(any());
+    }
+
+    // Test createReview - Booking Cancelled (status = 0)
+    @Test
+    void testCreateReview_BookingCancelled() {
+        testBooking.setStatus(0);
+        
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(testBooking));
+
+        assertThrows(IllegalArgumentException.class, () -> reviewService.createReview(testRequest));
+        verify(reviewRepository, never()).save(any());
+    }
+
+    // Test getReviewByReviewID - Success as Customer
     @Test
     void testGetReviewByReviewID_Success_AsCustomer() {
-        // Arrange
-        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
         when(userContext.getRole()).thenReturn(RoleGroup.CUSTOMER);
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(testReview));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
 
-        // Act
         ReviewResponseDTO result = reviewService.getReviewByReviewID(reviewId);
 
-        // Assert
         assertNotNull(result);
         assertEquals(reviewId, result.getReviewID());
-        assertEquals(userId, result.getCustomerID());
-        verify(reviewRepository, times(1)).findById(reviewId);
+        assertEquals("Test Hotel", result.getPropertyName());
     }
 
+    // Test getReviewByReviewID - Success as Owner
     @Test
     void testGetReviewByReviewID_Success_AsOwner() {
-        // Arrange
-        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
         when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
         when(userContext.getUserID()).thenReturn(ownerId);
-        when(bookingRepository.findById(reviewId)).thenReturn(Optional.of(booking));
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(testReview));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
 
-        // Act
         ReviewResponseDTO result = reviewService.getReviewByReviewID(reviewId);
 
-        // Assert
         assertNotNull(result);
         assertEquals(reviewId, result.getReviewID());
-        verify(reviewRepository, times(1)).findById(reviewId);
     }
 
+    // Test getReviewByReviewID - Unauthorized Owner
     @Test
-    void testGetReviewByReviewID_Unauthorized_DifferentOwner() {
-        // Arrange
-        UUID differentOwnerId = UUID.randomUUID();
-        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
+    void testGetReviewByReviewID_UnauthorizedOwner() {
+        UUID otherOwnerId = UUID.randomUUID();
+        
         when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
-        when(userContext.getUserID()).thenReturn(differentOwnerId);
-        when(bookingRepository.findById(reviewId)).thenReturn(Optional.of(booking));
+        when(userContext.getUserID()).thenReturn(otherOwnerId);
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(testReview));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
 
-        // Act & Assert
-        assertThrows(SecurityException.class, 
-                () -> reviewService.getReviewByReviewID(reviewId));
-        verify(reviewRepository, times(1)).findById(reviewId);
+        assertThrows(SecurityException.class, () -> reviewService.getReviewByReviewID(reviewId));
     }
 
+    // Test getReviewByReviewID - Review Not Found
     @Test
     void testGetReviewByReviewID_NotFound() {
-        // Arrange
         when(reviewRepository.findById(reviewId)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(NotFoundException.class, 
-                () -> reviewService.getReviewByReviewID(reviewId));
-        verify(reviewRepository, times(1)).findById(reviewId);
+        assertThrows(NotFoundException.class, () -> reviewService.getReviewByReviewID(reviewId));
     }
 
-    @Test
-    void testGetAllReviewsByPropertyID_Success_AsSUPERADMIN() {
-        // Arrange
-        List<Review> reviews = Arrays.asList(review);
-        when(userContext.getRole()).thenReturn(RoleGroup.SUPERADMIN);
-        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(property));
-        when(reviewRepository.findAllByPropertyID(propertyId)).thenReturn(reviews);
-
-        // Act
-        List<ReviewResponseDTO> result = reviewService.getAllReviewsByPropertyID(propertyId);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(reviewId, result.get(0).getReviewID());
-        verify(reviewRepository, times(1)).findAllByPropertyID(propertyId);
-    }
-
+    // Test getAllReviewsByPropertyID - Success as Owner
     @Test
     void testGetAllReviewsByPropertyID_Success_AsOwner() {
-        // Arrange
-        List<Review> reviews = Arrays.asList(review);
         when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
         when(userContext.getUserID()).thenReturn(ownerId);
-        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(property));
-        when(reviewRepository.findAllByPropertyID(propertyId)).thenReturn(reviews);
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        when(reviewRepository.findAllByPropertyID(propertyId))
+                .thenReturn(Collections.singletonList(testReview));
 
-        // Act
         List<ReviewResponseDTO> result = reviewService.getAllReviewsByPropertyID(propertyId);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(reviewRepository, times(1)).findAllByPropertyID(propertyId);
-    }
-
-    @Test
-    void testGetAllReviewsByPropertyID_Unauthorized_DifferentOwner() {
-        // Arrange
-        UUID differentOwnerId = UUID.randomUUID();
-        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
-        when(userContext.getUserID()).thenReturn(differentOwnerId);
-        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(property));
-
-        // Act & Assert
-        assertThrows(SecurityException.class, 
-                () -> reviewService.getAllReviewsByPropertyID(propertyId));
-        verify(reviewRepository, never()).findAllByPropertyID(propertyId);
-    }
-
-    @Test
-    void testGetAllReviewsByPropertyID_PropertyNotFound() {
-        // Arrange
-        when(userContext.getRole()).thenReturn(RoleGroup.SUPERADMIN);
-        when(propertyRepository.findById(propertyId)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(NotFoundException.class, 
-                () -> reviewService.getAllReviewsByPropertyID(propertyId));
-        verify(reviewRepository, never()).findAllByPropertyID(propertyId);
-    }
-
-    @Test
-    void testGetAllReviewsByPropertyID_EmptyList() {
-        // Arrange
-        when(userContext.getRole()).thenReturn(RoleGroup.SUPERADMIN);
-        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(property));
-        when(reviewRepository.findAllByPropertyID(propertyId)).thenReturn(Arrays.asList());
-
-        // Act
-        List<ReviewResponseDTO> result = reviewService.getAllReviewsByPropertyID(propertyId);
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(reviewRepository, times(1)).findAllByPropertyID(propertyId);
-    }
-
-    @Test
-    void testGetAllReviewsByCustomerID_Success() {
-        // Arrange
-        List<Review> reviews = Arrays.asList(review);
-        when(userContext.getUserID()).thenReturn(userId);
-        when(reviewRepository.findAllByCustomerID(userId)).thenReturn(reviews);
-
-        // Act
-        List<ReviewResponseDTO> result = reviewService.getAllReviewsByCustomerID(userId);
-
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(reviewId, result.get(0).getReviewID());
-        verify(reviewRepository, times(1)).findAllByCustomerID(userId);
     }
 
+    // Test getAllReviewsByPropertyID - Success as Admin
     @Test
-    void testGetAllReviewsByCustomerID_Unauthorized() {
-        // Arrange
-        when(userContext.getUserID()).thenReturn(otherUserId);
+    void testGetAllReviewsByPropertyID_Success_AsAdmin() {
+        when(userContext.getRole()).thenReturn(RoleGroup.SUPERADMIN);
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        when(reviewRepository.findAllByPropertyID(propertyId))
+                .thenReturn(Collections.singletonList(testReview));
 
-        // Act & Assert
-        assertThrows(SecurityException.class, 
-                () -> reviewService.getAllReviewsByCustomerID(userId));
-        verify(reviewRepository, never()).findAllByCustomerID(any(UUID.class));
-    }
+        List<ReviewResponseDTO> result = reviewService.getAllReviewsByPropertyID(propertyId);
 
-    @Test
-    void testGetAllReviewsByCustomerID_EmptyList() {
-        // Arrange
-        when(userContext.getUserID()).thenReturn(userId);
-        when(reviewRepository.findAllByCustomerID(userId)).thenReturn(Arrays.asList());
-
-        // Act
-        List<ReviewResponseDTO> result = reviewService.getAllReviewsByCustomerID(userId);
-
-        // Assert
         assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(reviewRepository, times(1)).findAllByCustomerID(userId);
+        assertEquals(1, result.size());
     }
 
+    // Test getAllReviewsByPropertyID - Unauthorized Owner
+    @Test
+    void testGetAllReviewsByPropertyID_UnauthorizedOwner() {
+        UUID otherOwnerId = UUID.randomUUID();
+        
+        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
+        when(userContext.getUserID()).thenReturn(otherOwnerId);
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+
+        assertThrows(SecurityException.class, 
+                () -> reviewService.getAllReviewsByPropertyID(propertyId));
+    }
+
+    // Test getAllReviewsByPropertyID - Property Not Found
+    @Test
+    void testGetAllReviewsByPropertyID_PropertyNotFound() {
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, 
+                () -> reviewService.getAllReviewsByPropertyID(propertyId));
+    }
+
+    // Test getAllReviewsByPropertyID - Multiple Reviews
     @Test
     void testGetAllReviewsByPropertyID_MultipleReviews() {
-        // Arrange
         Review review2 = Review.builder()
                 .reviewID(UUID.randomUUID())
-                .customerID(otherUserId)
+                .customerID(UUID.randomUUID())
+                .customerName("Customer 2")
+                .propertyID(propertyId)
                 .bookingID(UUID.randomUUID())
                 .comment("Good stay")
                 .cleanlinessRating(4)
@@ -424,56 +386,172 @@ class ReviewServiceImplTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        List<Review> reviews = Arrays.asList(review, review2);
         when(userContext.getRole()).thenReturn(RoleGroup.SUPERADMIN);
-        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(property));
-        when(reviewRepository.findAllByPropertyID(propertyId)).thenReturn(reviews);
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        when(reviewRepository.findAllByPropertyID(propertyId))
+                .thenReturn(Arrays.asList(testReview, review2));
 
-        // Act
         List<ReviewResponseDTO> result = reviewService.getAllReviewsByPropertyID(propertyId);
 
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(reviewRepository, times(1)).findAllByPropertyID(propertyId);
     }
 
+    // Test getAllReviewsByCustomerID - Success
     @Test
-    void testCreateReview_DifferentRatings() {
-        // Arrange
-        reviewRequest.setCleanlinessRating(3);
-        reviewRequest.setFacilityRating(4);
-        reviewRequest.setServiceRating(2);
-        reviewRequest.setValueRating(5);
-        
-        when(userContext.getUserID()).thenReturn(userId);
-        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
-        when(reviewRepository.save(any(Review.class))).thenAnswer(i -> {
-            Review savedReview = i.getArgument(0);
-            savedReview.setReviewID(reviewId);
-            return savedReview;
-        });
+    void testGetAllReviewsByCustomerID_Success() {
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(reviewRepository.findAllByCustomerID(customerId))
+                .thenReturn(Collections.singletonList(testReview));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
 
-        // Act
-        ReviewResponseDTO result = reviewService.createReview(reviewRequest);
+        List<ReviewResponseDTO> result = reviewService.getAllReviewsByCustomerID(customerId);
 
-        // Assert
-        assertEquals(3, result.getOverallRating()); // (3+4+2+5)/4 = 3.5 -> 3 (integer division)
-    }
-
-    @Test
-    void testGetReviewByReviewID_Success_AsSUPERADMIN() {
-        // Arrange
-        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
-        when(userContext.getRole()).thenReturn(RoleGroup.SUPERADMIN);
-
-        // Act
-        ReviewResponseDTO result = reviewService.getReviewByReviewID(reviewId);
-
-        // Assert
         assertNotNull(result);
-        assertEquals(reviewId, result.getReviewID());
-        assertEquals("Great experience!", result.getComment());
-        verify(reviewRepository, times(1)).findById(reviewId);
+        assertEquals(1, result.size());
+        assertEquals(reviewId, result.get(0).getReviewID());
+    }
+
+    // Test getAllReviewsByCustomerID - Unauthorized
+    @Test
+    void testGetAllReviewsByCustomerID_Unauthorized() {
+        UUID otherCustomerId = UUID.randomUUID();
+        
+        when(userContext.getUserID()).thenReturn(customerId);
+
+        assertThrows(SecurityException.class, 
+                () -> reviewService.getAllReviewsByCustomerID(otherCustomerId));
+    }
+
+    // Test getAllReviewsByCustomer - Success
+    @Test
+    void testGetAllReviewsByCustomer_Success() {
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(reviewRepository.findAllByCustomerID(customerId))
+                .thenReturn(Collections.singletonList(testReview));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+
+        List<ReviewResponseDTO> result = reviewService.getAllReviewsByCustomer();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(reviewId, result.get(0).getReviewID());
+    }
+
+    // Test getAllReviewsByCustomer - No Reviews
+    @Test
+    void testGetAllReviewsByCustomer_NoReviews() {
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(reviewRepository.findAllByCustomerID(customerId))
+                .thenReturn(Collections.emptyList());
+
+        List<ReviewResponseDTO> result = reviewService.getAllReviewsByCustomer();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    // Test getAllReviewsByCustomer - Multiple Reviews
+    @Test
+    void testGetAllReviewsByCustomer_MultipleReviews() {
+        Property property2 = Property.builder()
+                .propertyID(UUID.randomUUID())
+                .propertyName("Hotel 2")
+                .ownerID(ownerId)
+                .build();
+
+        Review review2 = Review.builder()
+                .reviewID(UUID.randomUUID())
+                .customerID(customerId)
+                .customerName("Test Customer")
+                .propertyID(property2.getPropertyID())
+                .bookingID(UUID.randomUUID())
+                .comment("Another good stay")
+                .cleanlinessRating(5)
+                .facilityRating(5)
+                .serviceRating(5)
+                .valueRating(5)
+                .overallRating(5)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(reviewRepository.findAllByCustomerID(customerId))
+                .thenReturn(Arrays.asList(testReview, review2));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        when(propertyRepository.findById(property2.getPropertyID())).thenReturn(Optional.of(property2));
+
+        List<ReviewResponseDTO> result = reviewService.getAllReviewsByCustomer();
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+    }
+
+    // Test Edge Case - Checkout exactly at current time
+    @Test
+    void testCreateReview_CheckoutAtCurrentTime() {
+        testBooking.setCheckOutDate(LocalDateTime.now().minusSeconds(1));
+        
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(userContext.getName()).thenReturn("Test Customer");
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(testBooking));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        when(reviewRepository.save(any(Review.class))).thenReturn(testReview);
+
+        ReviewResponseDTO result = reviewService.createReview(testRequest);
+
+        assertNotNull(result);
+        verify(reviewRepository).save(any(Review.class));
+    }
+
+    // Test Rating Calculation - All Same Ratings
+    @Test
+    void testCreateReview_AllSameRatings() {
+        testRequest.setCleanlinessRating(3);
+        testRequest.setFacilityRating(3);
+        testRequest.setServiceRating(3);
+        testRequest.setValueRating(3);
+        
+        Review savedReview = Review.builder()
+                .reviewID(reviewId)
+                .customerID(customerId)
+                .customerName("Test Customer")
+                .propertyID(propertyId)
+                .bookingID(bookingId)
+                .comment("Average stay")
+                .cleanlinessRating(3)
+                .facilityRating(3)
+                .serviceRating(3)
+                .valueRating(3)
+                .overallRating(3)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(userContext.getName()).thenReturn("Test Customer");
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(testBooking));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        when(reviewRepository.save(any(Review.class))).thenReturn(savedReview);
+
+        ReviewResponseDTO result = reviewService.createReview(testRequest);
+
+        assertEquals(3, result.getOverallRating());
+    }
+
+    // Test with null comment
+    @Test
+    void testCreateReview_NullComment() {
+        testRequest.setComment(null);
+        
+        when(userContext.getUserID()).thenReturn(customerId);
+        when(userContext.getName()).thenReturn("Test Customer");
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(testBooking));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(testProperty));
+        when(reviewRepository.save(any(Review.class))).thenReturn(testReview);
+
+        ReviewResponseDTO result = reviewService.createReview(testRequest);
+
+        assertNotNull(result);
+        verify(reviewRepository).save(any(Review.class));
     }
 }

@@ -114,7 +114,7 @@ public class BillController {
      */
     @GetMapping(VIEW_SERVICE_BILL)
     public ResponseEntity<BaseResponseDTO<List<BillResponseDTO>>> getServiceBills(
-        @PathVariable String serviceName,
+        @PathVariable(value = "serviceName") String serviceName,
         @RequestParam(value = "status", required = false) Integer status,
         @RequestParam(value = "customerID", required = false) UUID customerID
     ) {
@@ -139,7 +139,7 @@ public class BillController {
      * @return The created bill with a success message and HTTP status code of CREATED
      */
     @PutMapping(UPDATE_BILL)
-    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> updateBill(@Valid @RequestBody BillRequestDTO bill, @PathVariable UUID billId) {
+    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> updateBill(@Valid @RequestBody BillRequestDTO bill, @PathVariable(value = "billId") UUID billId) {
         BillResponseDTO newBill = billService.updateBill(bill, billId);
         return responseUtil.success(
             newBill,
@@ -156,7 +156,7 @@ public class BillController {
      * @return A bill response DTO containing the bill's details
      */
     @GetMapping(VIEW_BILL_DETAILS)
-    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> getBillDetails(@PathVariable UUID billId) {
+    public ResponseEntity<BaseResponseDTO<BillResponseDTO>> getBillDetails(@PathVariable(value = "billId") UUID billId) {
         BillResponseDTO bill = billService.getBillDetails(billId);
         return responseUtil.success(
             bill,
@@ -167,7 +167,7 @@ public class BillController {
 
     @PostMapping(PAY_BILL)
     public ResponseEntity<BaseResponseDTO<BillResponseDTO>> payBill(
-        @PathVariable UUID billId,
+        @PathVariable(value = "billId") UUID billId,
         @RequestBody(required = false) BillCouponDTO request
     ) {
 

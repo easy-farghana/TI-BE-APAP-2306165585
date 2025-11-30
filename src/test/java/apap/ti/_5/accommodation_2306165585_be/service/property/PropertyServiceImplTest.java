@@ -273,45 +273,105 @@ class PropertyServiceImplTest {
                 .checkInDate(LocalDateTime.of(2024, 1, 15, 14, 0))
                 .checkOutDate(LocalDateTime.of(2024, 1, 17, 12, 0))
                 .totalPrice(500000)
+                .status(1) // Active booking
                 .room(testRoom)
                 .build();
 
         testRoom.getListAccommodationBooking().add(booking);
 
-        when(propertyRepository.findAll()).thenReturn(Collections.singletonList(testProperty));
+        when(propertyRepository.findAllActive()).thenReturn(Collections.singletonList(testProperty));
 
         IncomeStatisticsDTO result = propertyService.getIncomeStatistics(1, 2024);
 
         assertNotNull(result);
-        assertEquals(1, result.getPropertyNames().size());
+        assertNotNull(result.getPropertyStatistics());
+        assertEquals(1, result.getPropertyStatistics().size());
+        assertEquals("Test Hotel", result.getPropertyStatistics().get(0).getPropertyName());
+        assertEquals(500000, result.getPropertyStatistics().get(0).getPropertyIncomes());
         assertEquals(500000, result.getTotalIncome());
     }
 
     @Test
     void testGetIncomeStatistics_NoBookingsInMonth() {
-        when(propertyRepository.findAll()).thenReturn(Collections.singletonList(testProperty));
+        when(propertyRepository.findAllActive()).thenReturn(Collections.singletonList(testProperty));
 
         IncomeStatisticsDTO result = propertyService.getIncomeStatistics(12, 2024);
 
         assertNotNull(result);
+        assertNotNull(result.getPropertyStatistics());
+        assertEquals(1, result.getPropertyStatistics().size());
+        assertEquals("Test Hotel", result.getPropertyStatistics().get(0).getPropertyName());
+        assertEquals(0, result.getPropertyStatistics().get(0).getPropertyIncomes());
         assertEquals(0, result.getTotalIncome());
     }
 
     @Test
     void testGetIncomeStatistics_MultipleProperties() {
+        // Setup second property with booking
+        RoomType roomType2 = RoomType.builder()
+                .roomTypeID(UUID.randomUUID())
+                .name("Standard")
+                .listRoom(new ArrayList<>())
+                .build();
+
+        Room room2 = Room.builder()
+                .roomID(UUID.randomUUID())
+                .roomType(roomType2)
+                .listAccommodationBooking(new ArrayList<>())
+                .availabilityStatus(1)
+                .build();
+
+        AccommodationBooking booking2 = AccommodationBooking.builder()
+                .bookingID(UUID.randomUUID())
+                .checkInDate(LocalDateTime.of(2024, 1, 20, 14, 0))
+                .checkOutDate(LocalDateTime.of(2024, 1, 22, 12, 0))
+                .totalPrice(300000)
+                .status(1)
+                .room(room2)
+                .build();
+
+        room2.getListAccommodationBooking().add(booking2);
+        roomType2.getListRoom().add(room2);
+
         Property property2 = Property.builder()
                 .propertyID(UUID.randomUUID())
                 .propertyName("Hotel 2")
                 .activeStatus(1)
-                .listRoomType(new ArrayList<>())
+                .listRoomType(Arrays.asList(roomType2))
                 .build();
 
-        when(propertyRepository.findAll()).thenReturn(Arrays.asList(testProperty, property2));
+        roomType2.setProperty(property2);
+
+        // Add booking to first property
+        AccommodationBooking booking1 = AccommodationBooking.builder()
+                .bookingID(UUID.randomUUID())
+                .checkInDate(LocalDateTime.of(2024, 1, 10, 14, 0))
+                .checkOutDate(LocalDateTime.of(2024, 1, 12, 12, 0))
+                .totalPrice(400000)
+                .status(1)
+                .room(testRoom)
+                .build();
+
+        testRoom.getListAccommodationBooking().add(booking1);
+
+        when(propertyRepository.findAllActive()).thenReturn(Arrays.asList(testProperty, property2));
 
         IncomeStatisticsDTO result = propertyService.getIncomeStatistics(1, 2024);
 
         assertNotNull(result);
-        assertEquals(2, result.getPropertyNames().size());
+        assertNotNull(result.getPropertyStatistics());
+        assertEquals(2, result.getPropertyStatistics().size());
+        
+        // Verify first property
+        assertEquals("Test Hotel", result.getPropertyStatistics().get(0).getPropertyName());
+        assertEquals(400000, result.getPropertyStatistics().get(0).getPropertyIncomes());
+        
+        // Verify second property
+        assertEquals("Hotel 2", result.getPropertyStatistics().get(1).getPropertyName());
+        assertEquals(300000, result.getPropertyStatistics().get(1).getPropertyIncomes());
+        
+        // Verify total
+        assertEquals(700000, result.getTotalIncome());
     }
 
     // Test createPropertyTransaction
@@ -638,12 +698,14 @@ class PropertyServiceImplTest {
     @Test
     void testGetIncomeStatistics_InactiveProperty() {
         testProperty.setActiveStatus(0);
-        when(propertyRepository.findAll()).thenReturn(Collections.singletonList(testProperty));
+        
+        when(propertyRepository.findAllActive()).thenReturn(Collections.emptyList());
 
         IncomeStatisticsDTO result = propertyService.getIncomeStatistics(1, 2024);
 
         assertNotNull(result);
-        assertEquals(0, result.getPropertyNames().size());
+        assertNotNull(result.getPropertyStatistics());
+        assertEquals(0, result.getPropertyStatistics().size());
         assertEquals(0, result.getTotalIncome());
     }
 

@@ -20,6 +20,7 @@ import apap.ti._5.accommodation_2306165585_be.repository.ReviewRepository;
 import apap.ti._5.accommodation_2306165585_be.exception.NotFoundException;
 import apap.ti._5.accommodation_2306165585_be.model.AccommodationBooking;
 import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
+import apap.ti._5.accommodation_2306165585_be.exception.SecurityException;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
@@ -78,8 +79,8 @@ public class ReviewServiceImpl implements ReviewService {
             .overallRating(overallRating)
             .build();
 
-        reviewRepository.save(review);
-        return mapToReviewResponseDTO(review);
+        Review savedReview = reviewRepository.save(review);
+        return mapToReviewResponseDTO(savedReview);
     }
 
     @Override

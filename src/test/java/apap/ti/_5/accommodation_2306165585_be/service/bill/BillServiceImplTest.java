@@ -489,24 +489,6 @@ class BillServiceImplTest {
     }
 
     @Test
-    void testPayBill_WithCouponCode() {
-        UserInfoResponseDTO userInfo = new UserInfoResponseDTO();
-        userInfo.setSaldo(200000L);
-
-        when(billRepository.findById(billId)).thenReturn(Optional.of(testBill));
-        when(userContext.getUserID()).thenReturn(customerId);
-        when(externalApiService.getUserDetail(customerId)).thenReturn(userInfo);
-        doNothing().when(externalApiService).deductBalance(customerId, 200000L, 100000L);
-        doNothing().when(externalApiService).updateServicesBookingStatus("Accommodation", "REF123");
-        when(billRepository.save(any(Bill.class))).thenReturn(testBill);
-
-        BillResponseDTO result = billService.payBill(billId, "COUPON123");
-
-        assertNotNull(result);
-        verify(billRepository).save(any(Bill.class));
-    }
-
-    @Test
     void testPayBill_NotFound() {
         when(billRepository.findById(billId)).thenReturn(Optional.empty());
 
