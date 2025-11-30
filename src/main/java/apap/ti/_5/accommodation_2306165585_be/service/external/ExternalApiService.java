@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.glassfish.jaxb.runtime.v2.runtime.unmarshaller.IntData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.http.MediaType;
 
+import apap.ti._5.accommodation_2306165585_be.restdto.external.request.CouponRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.external.response.LoginJwtResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.external.response.PolicyResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.external.response.UserInfoResponseDTO;
@@ -322,6 +324,28 @@ public class ExternalApiService {
         }
     }
 
+    public int calculateDiscount(String couponCode, UUID userID) {
+        String url = accommodationServiceUrl + "/api/loyalty/coupon/use";
+
+        CouponRequestDTO request = new CouponRequestDTO(couponCode, userID);
+        try {
+            ResponseEntity<BaseResponseDTO<Map<String, Object>>> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                new HttpEntity<>(request, createHeaders(true)),
+                new ParameterizedTypeReference<BaseResponseDTO<Map<String, Object>>>() {}
+            );
+            int percentOff = (int) response.getBody().getData().get("percentOff");
+            return percentOff;
+        } catch (HttpClientErrorException e) {
+            log.error("POST /api/loyalty/coupon/use returned non-OK status: {}", e.getMessage());
+            throw new IllegalStateException("Failed to calculate discount: service returned " + e.getMessage());
+        } catch (Exception e){
+            log.error("Failed to calculate discount: {}", e.getMessage());
+            throw new IllegalStateException("Failed to calculate discount");
+        }
+    }
+
     /**
      * Create a new bill with the given information.
      * @param request the information of the bill to be created
@@ -407,6 +431,8 @@ public class ExternalApiService {
             return null;
         }
     }
+
+
 
 
 
