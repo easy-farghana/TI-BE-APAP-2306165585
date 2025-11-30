@@ -30,9 +30,11 @@ import apap.ti._5.accommodation_2306165585_be.service.property.PropertyService;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 import apap.ti._5.accommodation_2306165585_be.utils.ResponseUtil;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class PropertyController {
     
     @Autowired
@@ -122,13 +124,14 @@ public class PropertyController {
      */
     @GetMapping(VIEW_PROPERTY)
     public ResponseEntity<BaseResponseDTO<PropertyResponseDTO>> getPropertyById(
-        @PathVariable UUID propertyId, 
+        @PathVariable("propertyId") UUID propertyId, 
         @RequestParam(required = false) String checkIn, 
         @RequestParam(required = false) String checkOut
     ) {
 
         PropertyResponseDTO propertyDTO;
         if (checkIn != null && checkOut != null) {
+            log.info("Property with filters: " + propertyId + ", " + checkIn + ", " + checkOut);
             propertyDTO = propertyService.getPropertyById(
                 propertyId, 
                 java.time.LocalDateTime.parse(checkIn), 
@@ -169,7 +172,7 @@ public class PropertyController {
     }
 
     @DeleteMapping(DELETE_PROPERTY)
-    public ResponseEntity<BaseResponseDTO<String>> deleteProperty(@PathVariable UUID propertyId) {
+    public ResponseEntity<BaseResponseDTO<String>> deleteProperty(@PathVariable("propertyId") UUID propertyId) {
         propertyService.deleteProperty(propertyId);
         return responseUtil.success(
             null,
@@ -189,7 +192,7 @@ public class PropertyController {
 
     @PostMapping(ADD_ROOM_TYPE)
     public ResponseEntity<BaseResponseDTO<PropertyResponseDTO>> addRoomTypeToProperty(
-        @PathVariable UUID propertyId,
+        @PathVariable("propertyId") UUID propertyId,
         @RequestBody ListAddRoomTypeRequestDTO request
     ) {
         PropertyResponseDTO propertyDTO = propertyService.addRoomTypeToProperty(propertyId, request);

@@ -14,7 +14,6 @@ public interface AccommodationBookingService {
    void updateBookingStatusesForCheckIn();
    AccommodationBookingResponseDTO cancelBooking(UUID bookingID);
    AccommodationBookingResponseDTO updateBookingStatus(UUID bookingID);
-   AccommodationBookingResponseDTO giveRefund(UUID bookingID);
    AccommodationBookingResponseDTO getAccommodationBookingById(UUID id);
    AccommodationBookingResponseDTO updateBooking(UUID bookingID, BookingRequestDTO request);
 }

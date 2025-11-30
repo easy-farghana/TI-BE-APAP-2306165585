@@ -19,6 +19,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.http.MediaType;
 
 import apap.ti._5.accommodation_2306165585_be.restdto.external.response.LoginJwtResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.external.response.PolicyResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.external.response.UserInfoResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.BillRequestDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
@@ -140,7 +141,7 @@ public class ExternalApiService {
      * @throws HttpClientErrorException if there is an HTTP error while deducting the balance
      * @throws RuntimeException if there is an unexpected error while deducting the balance
      */
-    public UserInfoResponseDTO deductBalance(UUID userID, Long userBalance, Long paymentAmount) {
+    public void deductBalance(UUID userID, Long userBalance, Long paymentAmount) {
         try {
             String adminToken = getAdminToken();
             if (adminToken == null || adminToken.isEmpty()) {
@@ -183,8 +184,6 @@ public class ExternalApiService {
                 log.error("Flight service returned NULL data field when deducting balance for user {}", userID);
                 throw new IllegalStateException("No user data returned from flight service");
             }
-
-            return bodyResponse.getData();
         } catch (HttpClientErrorException e) {
             log.error("HTTP error while deducting balance for user {}: {}", userID, e.getMessage());
             throw e; 
@@ -205,13 +204,10 @@ public class ExternalApiService {
                 updateAccommodationBookingStatus(serviceReferenceID);
                 break;
             case "Flight":
-                // updateFlightBookingStatus(serviceReferenceID);
+                updateFlightBookingStatus(serviceReferenceID);
                 break;
             case "Insurance":
-                // updateInsuranceBookingStatus(serviceReferenceID);
-                break;
-            case "VehicleRental":
-                // updateRentalBookingStatus(serviceReferenceID);
+                updateInsurancePolicyStatus(serviceReferenceID);
                 break;
             case "TourPackage":
                 // updateTourBookingStatus(serviceReferenceID);
@@ -223,37 +219,12 @@ public class ExternalApiService {
     }
 
     /**
-     * Create a new bill with the given information.
-     * @param request the information of the bill to be created
-     * @return the created bill with a success message and HTTP status code of CREATED
+     * Update the status of an accommodation booking.
+     * @param serviceReferenceID the reference ID of the booking
+     * @return the updated booking information
      * @throws IllegalStateException if the service returned an error status
+     * @throws HttpClientException if there is an HTTP error while updating the booking status
      */
-    public BillResponseDTO createBill(BillRequestDTO request) {
-        HttpEntity<BillRequestDTO> entity = new HttpEntity<>(request, createHeaders(true));
-        log.info("Sending to bill-service: {}", request.toString());
-
-        // Call service
-        String url = accommodationServiceUrl + "/api/bill/create";
-        try {
-            ResponseEntity<BaseResponseDTO<BillResponseDTO>> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<BaseResponseDTO<BillResponseDTO>>() {}
-            );
-            return response.getBody().getData();
-        } catch (HttpClientErrorException e) {
-            log.error("POST /api/bill/create returned non-OK status: {}", e.getMessage());
-            throw new IllegalStateException("Failed to create bill: service returned " + e.getMessage());
-        } catch (SecurityException e) {
-            log.error("POST /api/bill/create returned non-OK status: {}", e.getMessage());
-            throw new IllegalStateException("Failed to create bill: service returned " + e.getMessage());
-        } catch (Exception e) {
-            log.error("POST /api/bill/create returned non-OK status: {}", e.getMessage());
-            throw new IllegalStateException("Failed to create bill: service returned " + e.getMessage());
-        }
-    }
-
     public AccommodationBookingResponseDTO updateAccommodationBookingStatus(String serviceReferenceID) {
         // Call service
         String url = accommodationServiceUrl + "/api/booking/update/status/" + serviceReferenceID;
@@ -275,6 +246,115 @@ public class ExternalApiService {
         } catch (HttpClientErrorException e) {
             log.error("HTTP error while updating Accommodation booking status: {}", e.getMessage());
             throw e;
+        }
+    }
+
+    /**
+     * Update the status of an insurance policy.
+     * @param serviceReferenceID the reference ID of the policy
+     * @throws IllegalStateException if the service returned an error status
+     * @throws HttpClientException if there is an HTTP error while updating the policy status
+     */
+    public void updateInsurancePolicyStatus(String serviceReferenceID) {
+        String url = insuranceServiceUrl + "/api/" + serviceReferenceID + "/pay";
+        HttpEntity<BillRequestDTO> entity = new HttpEntity<>(createHeaders(false));
+
+        try {
+            restTemplate.put(
+                url, 
+                HttpMethod.POST, 
+                entity,
+                new ParameterizedTypeReference<BaseResponseDTO<PolicyResponseDTO>>() {}
+            );
+        } catch (HttpClientErrorException e) {
+            log.error("POST /api/" + serviceReferenceID + "/pay returned non-OK status: {}", e.getMessage());
+            throw new IllegalStateException("Failed to update policy status: service returned " + e.getMessage());
+        }
+    }
+
+    public void updateFlightBookingStatus(String serviceReferenceID) {
+        String url = flightServiceUrl + "/api/bookings/" + serviceReferenceID + "/status";
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", 2);
+        HttpEntity<?> entity = new HttpEntity<>(body, createHeaders(false));
+
+        try {
+            restTemplate.put(
+                url, 
+                HttpMethod.PUT, 
+                entity,
+                new ParameterizedTypeReference<BaseResponseDTO<Map<String, Object>>>() {}
+            );
+        } catch (HttpClientErrorException e) {
+            log.error("POST /api/bookings/" + serviceReferenceID + "/status returned non-OK status: {}", e.getMessage());
+            throw new IllegalStateException("Failed to update Flight booking status: service returned " + e.getMessage());
+        }
+    }
+
+    /**
+     * Check the status of a rental booking.
+     * @param serviceReferenceID the reference ID of the booking
+     * @return true if the booking status is "Done", false otherwise
+     * @throws IllegalStateException if the service returned an error status
+     * @throws HttpClientException if there is an HTTP error while checking the booking status
+     */
+    public boolean checkRentalStatus(String serviceReferenceID) {
+        String url = rentalServiceUrl + "/api/bookings/" + serviceReferenceID;
+        try {
+            ResponseEntity<BaseResponseDTO<Map<String, Object>>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                new HttpEntity<>(createHeaders(true)),
+                new ParameterizedTypeReference<BaseResponseDTO<Map<String, Object>>>() {}
+            );
+
+            Map<String, Object> data = response.getBody().getData();
+            return ((String) data.get("status")).equalsIgnoreCase("Done");
+        } catch (HttpClientErrorException e) {
+            log.error("GET /api/bookings/" + serviceReferenceID + " returned non-OK status: {}", e.getMessage());
+            throw new IllegalStateException("Failed to check Rental status: service returned " + e.getMessage());
+        }
+    }
+
+    /**
+     * Create a new bill with the given information.
+     * @param request the information of the bill to be created
+     * @return the created bill with a success message and HTTP status code of CREATED
+     * @throws IllegalStateException if the service returned an error status
+     */
+    public void createBill(BillRequestDTO request) {
+        HttpEntity<BillRequestDTO> entity = new HttpEntity<>(request, createHeaders(true));
+        log.info("Sending to bill-service: {}", request.toString());
+
+        // Call service
+        String url = accommodationServiceUrl + "/api/bill/create";
+        try {
+            ResponseEntity<BaseResponseDTO<BillResponseDTO>> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<BaseResponseDTO<BillResponseDTO>>() {}
+            );
+
+            if (response.getStatusCode().isError()) {
+                log.error("POST /api/bill/create returned non-OK status: {}", response.getStatusCode());
+                throw new IllegalStateException("Failed to create bill: service returned " + response.getStatusCode());
+            }
+
+            BaseResponseDTO<BillResponseDTO> bodyResponse = response.getBody();
+            if (bodyResponse == null) {
+                log.error("Accommodation service response body is NULL");
+                throw new IllegalStateException("Accommodation service response body is null");
+            }
+        } catch (HttpClientErrorException e) {
+            log.error("POST /api/bill/create returned non-OK status: {}", e.getMessage());
+            throw new IllegalStateException("Failed to create bill: service returned " + e.getMessage());
+        } catch (SecurityException e) {
+            log.error("POST /api/bill/create returned non-OK status: {}", e.getMessage());
+            throw new IllegalStateException("Failed to create bill: service returned " + e.getMessage());
+        } catch (Exception e) {
+            log.error("POST /api/bill/create returned non-OK status: {}", e.getMessage());
+            throw new IllegalStateException("Failed to create bill: service returned " + e.getMessage());
         }
     }
 

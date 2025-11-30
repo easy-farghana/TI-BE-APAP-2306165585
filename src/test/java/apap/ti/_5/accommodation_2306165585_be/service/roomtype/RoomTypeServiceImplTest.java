@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,20 +18,31 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import apap.ti._5.accommodation_2306165585_be.exception.NotFoundException;
 import apap.ti._5.accommodation_2306165585_be.model.Property;
 import apap.ti._5.accommodation_2306165585_be.model.Room;
 import apap.ti._5.accommodation_2306165585_be.model.RoomType;
 import apap.ti._5.accommodation_2306165585_be.repository.RoomTypeRepository;
 import apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype.AddRoomTypeRequestDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.request.roomtype.AddSingularRoomTypeDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.room.RoomResponseDTO;
 import apap.ti._5.accommodation_2306165585_be.restdto.response.roomtype.RoomTypeResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
+import apap.ti._5.accommodation_2306165585_be.security.UserContext;
+import apap.ti._5.accommodation_2306165585_be.service.property.PropertyService;
 import apap.ti._5.accommodation_2306165585_be.service.room.RoomService;
 
 @ExtendWith(MockitoExtension.class)
-public class RoomTypeServiceImplTest {
+class RoomTypeServiceImplTest {
 
     @Mock
     private RoomTypeRepository roomTypeRepository;
+
+    @Mock
+    private PropertyService propertyService;
+
+    @Mock
+    private UserContext userContext;
 
     @Mock
     private RoomService roomService;
@@ -37,89 +50,76 @@ public class RoomTypeServiceImplTest {
     @InjectMocks
     private RoomTypeServiceImpl roomTypeService;
 
-    private RoomType roomType1;
-    private RoomType roomType2;
+    private UUID roomTypeId;
+    private UUID propertyId;
+    private UUID ownerId;
+    private UUID otherOwnerId;
+    private RoomType roomType;
     private Property property;
-    private Room room1;
-    private RoomResponseDTO roomResponseDTO;
     private AddRoomTypeRequestDTO addRoomTypeRequest;
+    private AddSingularRoomTypeDTO addSingularRoomTypeRequest;
 
     @BeforeEach
     void setUp() {
-        // Setup Property
-        property = Property.builder()
-                .propertyID("HOT-1234-001")
-                .propertyName("Hotel Paradise")
-                .type(1)
-                .listRoomType(new ArrayList<>())
-                .build();
+        roomTypeId = UUID.randomUUID();
+        propertyId = UUID.randomUUID();
+        ownerId = UUID.randomUUID();
+        otherOwnerId = UUID.randomUUID();
 
-        // Setup Room
-        room1 = new Room();
-        room1.setRoomID("ROOM-001");
-        room1.setActiveRoom(1);
+        property = new Property();
+        property.setPropertyID(propertyId);
+        property.setOwnerID(ownerId);
+        property.setListRoomType(new ArrayList<>());
 
-        // Setup RoomType 1
-        roomType1 = RoomType.builder()
-                .roomTypeID("001-Deluxe-1")
-                .name("Deluxe")
-                .price(1000000)
-                .description("Deluxe room with city view")
+        roomType = RoomType.builder()
+                .roomTypeID(roomTypeId)
+                .name("Deluxe Room")
+                .price(500000)
+                .description("Luxury room with ocean view")
                 .capacity(2)
                 .facility("WiFi, TV, AC")
-                .floor(1)
-                .listRoom(new ArrayList<>(Arrays.asList(room1)))
-                .build();
-
-        // Setup RoomType 2
-        roomType2 = RoomType.builder()
-                .roomTypeID("001-Suite-2")
-                .name("Suite")
-                .price(2000000)
-                .description("Luxury suite")
-                .capacity(4)
-                .facility("WiFi, TV, AC, Jacuzzi")
-                .floor(2)
+                .floor(3)
+                .property(property)
                 .listRoom(new ArrayList<>())
                 .build();
 
-        // Setup RoomResponseDTO
-        roomResponseDTO = RoomResponseDTO.builder()
-                .roomID("ROOM-001")
-                .availabilityStatus(1)
-                .build();
-
-        // Setup AddRoomTypeRequestDTO
         addRoomTypeRequest = new AddRoomTypeRequestDTO();
-        addRoomTypeRequest.setName("Deluxe");
-        addRoomTypeRequest.setPrice(1000000);
-        addRoomTypeRequest.setDescription("Deluxe room");
+        addRoomTypeRequest.setName("Standard Room");
+        addRoomTypeRequest.setPrice(300000);
+        addRoomTypeRequest.setDescription("Comfortable standard room");
         addRoomTypeRequest.setCapacity(2);
-        addRoomTypeRequest.setFacility("WiFi, TV");
-        addRoomTypeRequest.setFloor(1);
+        addRoomTypeRequest.setFacility("WiFi, AC");
+        addRoomTypeRequest.setFloor(2);
         addRoomTypeRequest.setUnit(5);
+
+        addSingularRoomTypeRequest = new AddSingularRoomTypeDTO();
+        addSingularRoomTypeRequest.setPropertyID(propertyId);
+        addSingularRoomTypeRequest.setName("Suite Room");
+        addSingularRoomTypeRequest.setPrice(800000);
+        addSingularRoomTypeRequest.setDescription("Luxurious suite");
+        addSingularRoomTypeRequest.setCapacity(4);
+        addSingularRoomTypeRequest.setFacility("WiFi, TV, AC, Bathtub");
+        addSingularRoomTypeRequest.setFloor(5);
+        addSingularRoomTypeRequest.setUnit(3);
     }
 
     @Test
     void testGetAllRoomTypes_Success() {
         // Arrange
-        List<RoomType> roomTypes = Arrays.asList(roomType1, roomType2);
+        List<RoomType> roomTypes = Arrays.asList(roomType);
         when(roomTypeRepository.findAll()).thenReturn(roomTypes);
         when(roomService.getRoomsByRoomType(any(RoomType.class)))
-                .thenReturn(Arrays.asList(roomResponseDTO));
+                .thenReturn(new ArrayList<>());
 
         // Act
         List<RoomTypeResponseDTO> result = roomTypeService.getAllRoomTypes();
 
         // Assert
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("001-Deluxe-1", result.get(0).getRoomTypeID());
-        assertEquals("Deluxe", result.get(0).getName());
-        assertEquals(1000000, result.get(0).getPrice());
-        assertEquals("001-Suite-2", result.get(1).getRoomTypeID());
+        assertEquals(1, result.size());
+        assertEquals(roomTypeId, result.get(0).getRoomTypeID());
+        assertEquals("Deluxe Room", result.get(0).getName());
         verify(roomTypeRepository, times(1)).findAll();
-        verify(roomService, times(2)).getRoomsByRoomType(any(RoomType.class));
     }
 
     @Test
@@ -134,256 +134,286 @@ public class RoomTypeServiceImplTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(roomTypeRepository, times(1)).findAll();
-        verify(roomService, never()).getRoomsByRoomType(any(RoomType.class));
     }
 
     @Test
-    void testGetRoomTypesByProperty_Success() {
+    void testGetRoomTypeById_Success_AsSUPERADMIN() {
         // Arrange
-        property.getListRoomType().add(roomType1);
-        property.getListRoomType().add(roomType2);
+        when(roomTypeRepository.findById(roomTypeId)).thenReturn(Optional.of(roomType));
+        when(userContext.getRole()).thenReturn(RoleGroup.SUPERADMIN);
         when(roomService.getRoomsByRoomType(any(RoomType.class)))
-                .thenReturn(Arrays.asList(roomResponseDTO));
+                .thenReturn(new ArrayList<>());
+
+        // Act
+        RoomTypeResponseDTO result = roomTypeService.getRoomTypeById(roomTypeId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(roomTypeId, result.getRoomTypeID());
+        assertEquals("Deluxe Room", result.getName());
+        verify(roomTypeRepository, times(1)).findById(roomTypeId);
+    }
+
+    @Test
+    void testGetRoomTypeById_Success_AsOwner() {
+        // Arrange
+        when(roomTypeRepository.findById(roomTypeId)).thenReturn(Optional.of(roomType));
+        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
+        when(userContext.getUserID()).thenReturn(ownerId);
+        when(roomService.getRoomsByRoomType(any(RoomType.class)))
+                .thenReturn(new ArrayList<>());
+
+        // Act
+        RoomTypeResponseDTO result = roomTypeService.getRoomTypeById(roomTypeId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(roomTypeId, result.getRoomTypeID());
+        verify(roomTypeRepository, times(1)).findById(roomTypeId);
+    }
+
+    @Test
+    void testGetRoomTypeById_Unauthorized_DifferentOwner() {
+        // Arrange
+        when(roomTypeRepository.findById(roomTypeId)).thenReturn(Optional.of(roomType));
+        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
+        when(userContext.getUserID()).thenReturn(otherOwnerId);
+
+        // Act & Assert
+        assertThrows(SecurityException.class, 
+                () -> roomTypeService.getRoomTypeById(roomTypeId));
+        verify(roomTypeRepository, times(1)).findById(roomTypeId);
+    }
+
+    @Test
+    void testGetRoomTypeById_NotFound() {
+        // Arrange
+        when(roomTypeRepository.findById(roomTypeId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(NotFoundException.class, 
+                () -> roomTypeService.getRoomTypeById(roomTypeId));
+        verify(roomTypeRepository, times(1)).findById(roomTypeId);
+    }
+
+    @Test
+    void testGetRoomTypesByProperty_Success_AsSUPERADMIN() {
+        // Arrange
+        property.getListRoomType().add(roomType);
+        when(userContext.getRole()).thenReturn(RoleGroup.SUPERADMIN);
+        when(roomService.getRoomsByRoomType(any(RoomType.class)))
+                .thenReturn(new ArrayList<>());
 
         // Act
         List<RoomTypeResponseDTO> result = roomTypeService.getRoomTypesByProperty(property);
 
         // Assert
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("001-Deluxe-1", result.get(0).getRoomTypeID());
-        assertEquals("Deluxe", result.get(0).getName());
-        assertEquals(1, result.get(0).getFloor());
-        verify(roomService, times(2)).getRoomsByRoomType(any(RoomType.class));
+        assertEquals(1, result.size());
+        assertEquals(roomTypeId, result.get(0).getRoomTypeID());
     }
 
     @Test
-    void testGetRoomTypesByProperty_EmptyList() {
+    void testGetRoomTypesByProperty_Success_AsOwner() {
+        // Arrange
+        property.getListRoomType().add(roomType);
+        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
+        when(userContext.getUserID()).thenReturn(ownerId);
+        when(roomService.getRoomsByRoomType(any(RoomType.class)))
+                .thenReturn(new ArrayList<>());
+
+        // Act
         List<RoomTypeResponseDTO> result = roomTypeService.getRoomTypesByProperty(property);
 
         // Assert
         assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(roomService, never()).getRoomsByRoomType(any(RoomType.class));
+        assertEquals(1, result.size());
     }
 
     @Test
-    void testGetRoomTypesByProperty_WithDateRange_Success() {
+    void testGetRoomTypesByProperty_Unauthorized() {
         // Arrange
-        LocalDateTime checkIn = LocalDateTime.of(2024, 12, 1, 14, 0);
-        LocalDateTime checkOut = LocalDateTime.of(2024, 12, 5, 11, 0);
-        
-        property.getListRoomType().add(roomType1);
-        property.getListRoomType().add(roomType2);
-        
-        when(roomService.getRoomsByRoomType(any(RoomType.class), eq(checkIn), eq(checkOut)))
-                .thenReturn(Arrays.asList(roomResponseDTO));
+        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
+        when(userContext.getUserID()).thenReturn(otherOwnerId);
 
-        // Act
-        List<RoomTypeResponseDTO> result = roomTypeService.getRoomTypesByProperty(property, checkIn, checkOut);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("001-Deluxe-1", result.get(0).getRoomTypeID());
-        assertEquals("001-Suite-2", result.get(1).getRoomTypeID());
-        verify(roomService, times(2)).getRoomsByRoomType(any(RoomType.class), eq(checkIn), eq(checkOut));
+        // Act & Assert
+        assertThrows(SecurityException.class, 
+                () -> roomTypeService.getRoomTypesByProperty(property));
     }
 
     @Test
-    void testGetRoomTypesByProperty_WithDateRange_EmptyList() {
+    void testGetRoomTypesByPropertyWithDates_Success() {
         // Arrange
-        LocalDateTime checkIn = LocalDateTime.of(2024, 12, 1, 14, 0);
-        LocalDateTime checkOut = LocalDateTime.of(2024, 12, 5, 11, 0);
-        
+        property.getListRoomType().add(roomType);
+        LocalDateTime checkIn = LocalDateTime.now().plusDays(1);
+        LocalDateTime checkOut = LocalDateTime.now().plusDays(3);
+        when(userContext.getRole()).thenReturn(RoleGroup.SUPERADMIN);
+        when(roomService.getRoomsByRoomType(any(RoomType.class), 
+                any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(new ArrayList<>());
+
         // Act
-        List<RoomTypeResponseDTO> result = roomTypeService.getRoomTypesByProperty(property, checkIn, checkOut);
+        List<RoomTypeResponseDTO> result = roomTypeService
+                .getRoomTypesByProperty(property, checkIn, checkOut);
 
         // Assert
         assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(roomService, never()).getRoomsByRoomType(any(RoomType.class), any(), any());
+        assertEquals(1, result.size());
+        verify(roomService, times(1))
+                .getRoomsByRoomType(any(RoomType.class), eq(checkIn), eq(checkOut));
     }
 
     @Test
-    void testCreateRoomType_Success() {
+    void testGetRoomTypesByPropertyWithDates_Unauthorized() {
         // Arrange
-        String propertyId = "HOT-1234-001";
-        RoomType savedRoomType = RoomType.builder()
-                .roomTypeID("001-Deluxe-1")
-                .name("Deluxe")
-                .price(1000000)
-                .description("Deluxe room")
-                .capacity(2)
-                .facility("WiFi, TV")
-                .floor(1)
-                .listRoom(new ArrayList<>())
-                .build();
+        LocalDateTime checkIn = LocalDateTime.now().plusDays(1);
+        LocalDateTime checkOut = LocalDateTime.now().plusDays(3);
+        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
+        when(userContext.getUserID()).thenReturn(otherOwnerId);
 
-        when(roomTypeRepository.save(any(RoomType.class))).thenReturn(savedRoomType);
+        // Act & Assert
+        assertThrows(SecurityException.class, 
+                () -> roomTypeService.getRoomTypesByProperty(property, checkIn, checkOut));
+    }
+
+    @Test
+    void testCreateRoomType_Success_AsSUPERADMIN() {
+        // Arrange
+        when(userContext.getRole()).thenReturn(RoleGroup.SUPERADMIN);
+        when(roomTypeRepository.save(any(RoomType.class))).thenAnswer(i -> i.getArguments()[0]);
 
         // Act
-        RoomType result = roomTypeService.createRoomType(addRoomTypeRequest, propertyId);
+        RoomType result = roomTypeService.createRoomType(addRoomTypeRequest, property);
 
         // Assert
         assertNotNull(result);
-        assertEquals("001-Deluxe-1", result.getRoomTypeID());
-        assertEquals("Deluxe", result.getName());
-        assertEquals(1000000, result.getPrice());
-        assertEquals(2, result.getCapacity());
-        assertEquals(1, result.getFloor());
-        assertEquals("WiFi, TV", result.getFacility());
-        assertNotNull(result.getListRoom());
-        assertTrue(result.getListRoom().isEmpty());
+        assertEquals("Standard Room", result.getName());
+        assertEquals(300000, result.getPrice());
+        assertEquals(property, result.getProperty());
         verify(roomTypeRepository, times(1)).save(any(RoomType.class));
     }
 
     @Test
-    void testCreateRoomType_WithDifferentProperty() {
+    void testCreateRoomType_Success_AsOwner() {
         // Arrange
-        String propertyId = "VIL-5678-002";
-        AddRoomTypeRequestDTO request = new AddRoomTypeRequestDTO();
-        request.setName("Suite");
-        request.setPrice(2000000);
-        request.setDescription("Luxury suite");
-        request.setCapacity(4);
-        request.setFacility("WiFi, TV, Jacuzzi");
-        request.setFloor(3);
-
-        RoomType savedRoomType = RoomType.builder()
-                .roomTypeID("002-Suite-3")
-                .name("Suite")
-                .price(2000000)
-                .description("Luxury suite")
-                .capacity(4)
-                .facility("WiFi, TV, Jacuzzi")
-                .floor(3)
-                .listRoom(new ArrayList<>())
-                .build();
-
-        when(roomTypeRepository.save(any(RoomType.class))).thenReturn(savedRoomType);
+        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
+        when(userContext.getUserID()).thenReturn(ownerId);
+        when(roomTypeRepository.save(any(RoomType.class))).thenAnswer(i -> i.getArguments()[0]);
 
         // Act
-        RoomType result = roomTypeService.createRoomType(request, propertyId);
+        RoomType result = roomTypeService.createRoomType(addRoomTypeRequest, property);
 
         // Assert
         assertNotNull(result);
-        assertEquals("002-Suite-3", result.getRoomTypeID());
-        assertEquals("Suite", result.getName());
-        assertEquals(3, result.getFloor());
+        assertEquals("Standard Room", result.getName());
         verify(roomTypeRepository, times(1)).save(any(RoomType.class));
     }
 
     @Test
-    void testCreateRoomType_IDGenerationFormat() {
+    void testCreateRoomType_Unauthorized() {
         // Arrange
-        String propertyId = "HOT-9876-123";
-        when(roomTypeRepository.save(any(RoomType.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
+        when(userContext.getUserID()).thenReturn(otherOwnerId);
+
+        // Act & Assert
+        assertThrows(SecurityException.class, 
+                () -> roomTypeService.createRoomType(addRoomTypeRequest, property));
+        verify(roomTypeRepository, never()).save(any(RoomType.class));
+    }
+
+    @Test
+    void testCreateRoomTypeSingular_Success() {
+        // Arrange
+        when(propertyService.getRawPropertyById(propertyId)).thenReturn(property);
+        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
+        when(userContext.getUserID()).thenReturn(ownerId);
+        when(roomTypeRepository.save(any(RoomType.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(roomService.getRoomsByRoomType(any(RoomType.class)))
+                .thenReturn(new ArrayList<>());
 
         // Act
-        RoomType result = roomTypeService.createRoomType(addRoomTypeRequest, propertyId);
+        RoomTypeResponseDTO result = roomTypeService
+                .createRoomType(addSingularRoomTypeRequest);
 
         // Assert
         assertNotNull(result);
-        // PropertyID format: HOT-9876-123
-        // Extract: position 9-12 (0-indexed: 9,10,11) = "123"
-        assertTrue(result.getRoomTypeID().startsWith("123-"));
-        assertTrue(result.getRoomTypeID().contains("-Deluxe-"));
-        assertTrue(result.getRoomTypeID().endsWith("-1"));
+        assertEquals("Suite Room", result.getName());
+        assertEquals(800000, result.getPrice());
+        verify(propertyService, times(1)).getRawPropertyById(propertyId);
         verify(roomTypeRepository, times(1)).save(any(RoomType.class));
+    }
+
+    @Test
+    void testCreateRoomTypeSingular_Unauthorized() {
+        // Arrange
+        when(propertyService.getRawPropertyById(propertyId)).thenReturn(property);
+        when(userContext.getRole()).thenReturn(RoleGroup.ACCOMMODATION_OWNER);
+        when(userContext.getUserID()).thenReturn(otherOwnerId);
+
+        // Act & Assert
+        assertThrows(SecurityException.class, 
+                () -> roomTypeService.createRoomType(addSingularRoomTypeRequest));
+        verify(roomTypeRepository, never()).save(any(RoomType.class));
     }
 
     @Test
     void testUpdateRoomType_Success() {
         // Arrange
-        roomType1.setPrice(1200000);
-        roomType1.setDescription("Updated deluxe room");
-        roomType1.setFacility("WiFi, TV, AC, Minibar");
-
-        when(roomTypeRepository.save(any(RoomType.class))).thenReturn(roomType1);
+        when(roomTypeRepository.save(roomType)).thenReturn(roomType);
 
         // Act
-        RoomType result = roomTypeService.updateRoomType(roomType1);
+        RoomType result = roomTypeService.updateRoomType(roomType);
 
         // Assert
         assertNotNull(result);
-        assertEquals("001-Deluxe-1", result.getRoomTypeID());
-        assertEquals(1200000, result.getPrice());
-        assertEquals("Updated deluxe room", result.getDescription());
-        assertEquals("WiFi, TV, AC, Minibar", result.getFacility());
-        verify(roomTypeRepository, times(1)).save(roomType1);
+        assertEquals(roomType, result);
+        verify(roomTypeRepository, times(1)).save(roomType);
     }
 
     @Test
-    void testUpdateRoomType_MultipleFields() {
+    void testUpdateRoomType_ModifiedData() {
         // Arrange
-        roomType2.setPrice(2500000);
-        roomType2.setCapacity(6);
-        roomType2.setDescription("Premium luxury suite");
-        roomType2.setFacility("WiFi, TV, AC, Jacuzzi, Balcony");
-
-        when(roomTypeRepository.save(any(RoomType.class))).thenReturn(roomType2);
+        roomType.setPrice(600000);
+        roomType.setDescription("Updated description");
+        when(roomTypeRepository.save(roomType)).thenReturn(roomType);
 
         // Act
-        RoomType result = roomTypeService.updateRoomType(roomType2);
+        RoomType result = roomTypeService.updateRoomType(roomType);
 
         // Assert
         assertNotNull(result);
-        assertEquals("001-Suite-2", result.getRoomTypeID());
-        assertEquals(2500000, result.getPrice());
-        assertEquals(6, result.getCapacity());
-        assertEquals("Premium luxury suite", result.getDescription());
-        assertEquals("WiFi, TV, AC, Jacuzzi, Balcony", result.getFacility());
-        verify(roomTypeRepository, times(1)).save(roomType2);
+        assertEquals(600000, result.getPrice());
+        assertEquals("Updated description", result.getDescription());
+        verify(roomTypeRepository, times(1)).save(roomType);
     }
 
     @Test
-    void testMapToRoomTypeDTO_WithRooms() {
+    void testGetAllRoomTypes_MultipleRoomTypes() {
         // Arrange
-        property.getListRoomType().add(roomType1);
-        when(roomService.getRoomsByRoomType(roomType1))
-                .thenReturn(Arrays.asList(roomResponseDTO));
+        RoomType roomType2 = RoomType.builder()
+                .roomTypeID(UUID.randomUUID())
+                .name("Economy Room")
+                .price(200000)
+                .description("Budget room")
+                .capacity(1)
+                .facility("WiFi")
+                .floor(1)
+                .property(property)
+                .listRoom(new ArrayList<>())
+                .build();
 
-        // Act
-        List<RoomTypeResponseDTO> result = roomTypeService.getRoomTypesByProperty(property);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        RoomTypeResponseDTO dto = result.get(0);
-        assertEquals("001-Deluxe-1", dto.getRoomTypeID());
-        assertEquals("Deluxe", dto.getName());
-        assertEquals(1000000, dto.getPrice());
-        assertEquals("Deluxe room with city view", dto.getDescription());
-        assertEquals(2, dto.getCapacity());
-        assertEquals("WiFi, TV, AC", dto.getFacility());
-        assertEquals(1, dto.getFloor());
-        assertNotNull(dto.getListRoom());
-        assertEquals(1, dto.getListRoom().size());
-    }
-
-
-    @Test
-    void testMapToRoomTypeDTO_WithDateRange_NoAvailableRooms() {
-        // Arrange
-        LocalDateTime checkIn = LocalDateTime.of(2024, 12, 1, 14, 0);
-        LocalDateTime checkOut = LocalDateTime.of(2024, 12, 5, 11, 0);
-        
-        property.getListRoomType().add(roomType1);
-        
-        when(roomService.getRoomsByRoomType(roomType1, checkIn, checkOut))
+        List<RoomType> roomTypes = Arrays.asList(roomType, roomType2);
+        when(roomTypeRepository.findAll()).thenReturn(roomTypes);
+        when(roomService.getRoomsByRoomType(any(RoomType.class)))
                 .thenReturn(new ArrayList<>());
 
         // Act
-        List<RoomTypeResponseDTO> result = roomTypeService.getRoomTypesByProperty(property, checkIn, checkOut);
+        List<RoomTypeResponseDTO> result = roomTypeService.getAllRoomTypes();
 
         // Assert
         assertNotNull(result);
-        assertEquals(1, result.size());
-        RoomTypeResponseDTO dto = result.get(0);
-        assertEquals("001-Deluxe-1", dto.getRoomTypeID());
-        assertNotNull(dto.getListRoom());
-        assertTrue(dto.getListRoom().isEmpty());
-        verify(roomService, times(1)).getRoomsByRoomType(roomType1, checkIn, checkOut);
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(r -> r.getName().equals("Deluxe Room")));
+        assertTrue(result.stream().anyMatch(r -> r.getName().equals("Economy Room")));
     }
 }
