@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 public class ReviewResponseDTO {
     private UUID reviewID;
     private UUID customerID;
+    private String customerName;
+    private String propertyName;
     private UUID bookingID;
     private String comment;
     private int cleanlinessRating;

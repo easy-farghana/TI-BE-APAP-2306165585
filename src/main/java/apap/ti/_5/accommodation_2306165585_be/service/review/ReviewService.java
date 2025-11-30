@@ -10,4 +10,5 @@ public interface ReviewService {
     List<ReviewResponseDTO> getAllReviewsByCustomerID(UUID customerID);
     ReviewResponseDTO getReviewByReviewID(UUID reviewID);
     ReviewResponseDTO createReview(ReviewRequestDTO request);
+    List<ReviewResponseDTO> getAllReviewsByCustomer();
 }
