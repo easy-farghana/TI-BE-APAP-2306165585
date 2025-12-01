@@ -1,34 +1,49 @@
 package apap.ti._5.accommodation_2306165585_be.service.external;
 
-import apap.ti._5.accommodation_2306165585_be.restdto.external.request.CouponRequestDTO;
-import apap.ti._5.accommodation_2306165585_be.restdto.external.response.LoginJwtResponseDTO;
-import apap.ti._5.accommodation_2306165585_be.restdto.external.response.PolicyResponseDTO;
-import apap.ti._5.accommodation_2306165585_be.restdto.external.response.UserInfoResponseDTO;
-import apap.ti._5.accommodation_2306165585_be.restdto.request.bill.BillRequestDTO;
-import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
-import apap.ti._5.accommodation_2306165585_be.restdto.response.bill.BillResponseDTO;
-import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
-import jakarta.servlet.http.HttpServletRequest;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import apap.ti._5.accommodation_2306165585_be.restdto.external.response.LoginJwtResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.external.response.PolicyResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.external.response.UserInfoResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.BaseResponseDTO;
+import apap.ti._5.accommodation_2306165585_be.restdto.response.booking.AccommodationBookingResponseDTO;
+import jakarta.servlet.http.HttpServletRequest;
 
 @ExtendWith(MockitoExtension.class)
 class ExternalApiServiceTest {
@@ -476,7 +491,7 @@ class ExternalApiServiceTest {
 
             when(restTemplate.exchange(
                 anyString(),
-                eq(HttpMethod.POST),
+                eq(HttpMethod.PUT),
                 any(HttpEntity.class),
                 any(ParameterizedTypeReference.class)
             )).thenReturn(responseEntity);
@@ -567,7 +582,7 @@ class ExternalApiServiceTest {
 
             when(restTemplate.exchange(
                 anyString(),
-                eq(HttpMethod.POST),
+                eq(HttpMethod.PUT),
                 any(HttpEntity.class),
                 any(ParameterizedTypeReference.class)
             )).thenReturn(responseEntity);
@@ -585,7 +600,7 @@ class ExternalApiServiceTest {
 
             when(restTemplate.exchange(
                 anyString(),
-                eq(HttpMethod.POST),
+                eq(HttpMethod.PUT),
                 any(HttpEntity.class),
                 any(ParameterizedTypeReference.class)
             )).thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));

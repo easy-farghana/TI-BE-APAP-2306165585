@@ -84,6 +84,7 @@ public class ExternalApiService {
 
             if (withApiKey) {
                 headers.set("API-KEY", apiKey);
+                headers.set("X-API-KEY", apiKey);
             }
         }
 
@@ -258,18 +259,20 @@ public class ExternalApiService {
      * @throws HttpClientException if there is an HTTP error while updating the policy status
      */
     public void updateInsurancePolicyStatus(String serviceReferenceID) {
-        String url = insuranceServiceUrl + "/api/" + serviceReferenceID + "/pay";
-        HttpEntity<BillRequestDTO> entity = new HttpEntity<>(createHeaders(false));
+        String url = insuranceServiceUrl + "/api/policies/" + serviceReferenceID + "/status";
+        Map<String, String> body = new HashMap<>();
+        body.put("status", "PAID");
+        HttpEntity<?> entity = new HttpEntity<>(body, createHeaders(true));
 
         try {
             restTemplate.exchange(
                 url, 
-                HttpMethod.POST, 
+                HttpMethod.PUT, 
                 entity,
-                new ParameterizedTypeReference<BaseResponseDTO<PolicyResponseDTO>>() {}
+                new ParameterizedTypeReference<BaseResponseDTO<Map<String, Object>>>() {}
             );
         } catch (HttpClientErrorException e) {
-            log.error("POST /api/" + serviceReferenceID + "/pay returned non-OK status: {}", e.getMessage());
+            log.error("PUT /api/" + serviceReferenceID + "/pay returned non-OK status: {}", e.getMessage());
             throw new IllegalStateException("Failed to update policy status: service returned " + e.getMessage());
         }
     }
@@ -284,7 +287,7 @@ public class ExternalApiService {
         String url = flightServiceUrl + "/api/bookings/" + serviceReferenceID + "/status";
         Map<String, Object> body = new HashMap<>();
         body.put("status", 2);
-        HttpEntity<?> entity = new HttpEntity<>(body, createHeaders(false));
+        HttpEntity<?> entity = new HttpEntity<>(body, createHeaders(true));
 
         try {
             restTemplate.exchange(
@@ -294,7 +297,7 @@ public class ExternalApiService {
                 new ParameterizedTypeReference<BaseResponseDTO<Map<String, Object>>>() {}
             );
         } catch (HttpClientErrorException e) {
-            log.error("POST /api/bookings/" + serviceReferenceID + "/status returned non-OK status: {}", e.getMessage());
+            log.error("PUT /api/bookings/" + serviceReferenceID + "/status returned non-OK status: {}", e.getMessage());
             throw new IllegalStateException("Failed to update Flight booking status: service returned " + e.getMessage());
         }
     }

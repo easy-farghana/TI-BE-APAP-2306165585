@@ -20,6 +20,7 @@ import apap.ti._5.accommodation_2306165585_be.restdto.response.bill.BillResponse
 import apap.ti._5.accommodation_2306165585_be.security.RoleGroup;
 import apap.ti._5.accommodation_2306165585_be.security.UserContext;
 import apap.ti._5.accommodation_2306165585_be.service.external.ExternalApiService;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -204,6 +205,7 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
+    @Transactional
     public BillResponseDTO payBill(UUID billID, String couponCode) {
         Bill bill = billRepository.findById(billID).orElseThrow(
             () -> new NotFoundException("Bill not found")
@@ -245,13 +247,14 @@ public class BillServiceImpl implements BillService {
         // Deduct balance via profile service
         externalApiService.deductBalance(userID, userSaldo, paymentAmount);
 
-        // callback
-        externalApiService.updateServicesBookingStatus(bill.getServiceName(), bill.getServiceReferenceID());
-
         // Update bill
         bill.setStatus(1);
         bill.setPaymentTimestamp(LocalDateTime.now());
         billRepository.save(bill);
+
+        // callback
+        externalApiService.updateServicesBookingStatus(bill.getServiceName(), bill.getServiceReferenceID());
+
         
         return mapToBillResponseDTO(bill);
     }
